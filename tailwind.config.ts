@@ -39,6 +39,17 @@ export default {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
         },
+        severity: {
+          high: "hsl(var(--severity-high))",
+          medium: "hsl(var(--severity-medium))",
+          low: "hsl(var(--severity-low))",
+        },
+        score: {
+          excellent: "hsl(var(--score-excellent))",
+          good: "hsl(var(--score-good))",
+          average: "hsl(var(--score-average))",
+          poor: "hsl(var(--score-poor))",
+        },
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
