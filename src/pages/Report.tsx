@@ -81,6 +81,8 @@ export default function Report() {
 
         <Separator className="mb-8" />
 
+        <UXImpactSummaryCard results={analysis.heuristic_results} />
+
         <section className="mb-8">
           <h2 className="text-xl font-bold mb-3" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Executive Summary</h2>
           <p className="text-muted-foreground leading-relaxed">{analysis.summary || "No summary available."}</p>

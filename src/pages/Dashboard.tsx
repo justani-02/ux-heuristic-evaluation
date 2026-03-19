@@ -88,6 +88,8 @@ export default function Dashboard() {
           </div>
         </div>
 
+        <UXImpactSummaryCard results={analysis.heuristic_results} />
+
         <ScoreOverview analysis={analysis} />
 
         {(analysis.summary || analysis.screenshot_url) && (
