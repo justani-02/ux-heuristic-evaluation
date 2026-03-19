@@ -30,6 +30,7 @@ const STEPS = [
 export default function Index() {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
+  const [stage, setStage] = useState<AnalysisStage>("scraping");
   const navigate = useNavigate();
   const { toast } = useToast();
 
