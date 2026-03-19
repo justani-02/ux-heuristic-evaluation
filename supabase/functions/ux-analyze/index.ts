@@ -29,13 +29,20 @@ serve(async (req) => {
       );
     }
 
-    const systemPrompt = `You are an expert UX researcher and usability analyst. You evaluate websites using Jakob Nielsen's 10 Usability Heuristics from the Nielsen Norman Group.
+    const systemPrompt = `You are an expert UX researcher, usability analyst, and product strategist. You evaluate websites using Jakob Nielsen's 10 Usability Heuristics and provide actionable decision intelligence.
 
-Given website content, you must analyze it and return structured JSON data via the provided tool.
+Given website content, analyze it and return structured JSON data via the provided tool.
 
 For each of the 10 heuristics, identify specific issues found on the website. Be specific and actionable. Rate severity as "Low", "Medium", or "High".
 
-For each heuristic result, also provide sub-scores (0-100) for: Navigation Clarity, Information Hierarchy, Feedback Visibility, Error Prevention, Interaction Efficiency — representing how that heuristic impacts each UX dimension.
+For each heuristic result, also provide:
+- sub_scores (0-100) for: Navigation Clarity, Information Hierarchy, Feedback Visibility, Error Prevention, Interaction Efficiency
+- impact: "High", "Medium", or "Low" — based on how much this issue affects user goals and business outcomes
+- effort: "High", "Medium", or "Low" — based on implementation complexity to fix
+- kpi_impact: which business KPI this most affects (e.g., "Conversion Rate", "Task Completion", "User Retention", "Bounce Rate", "Time on Task", "Error Rate")
+- risk_level: "High", "Medium", or "Low" — the risk of NOT fixing this issue
+- task_title: a short actionable fix description (e.g., "Add breadcrumb navigation")
+- task_description: a detailed description of what needs to be done to fix this issue
 
 Also generate:
 - An overall UX score from 0-100
@@ -68,7 +75,7 @@ ${markdown.substring(0, 12000)}`;
             type: "function",
             function: {
               name: "ux_evaluation_result",
-              description: "Return the complete UX heuristic evaluation results",
+              description: "Return the complete UX heuristic evaluation results with decision intelligence data",
               parameters: {
                 type: "object",
                 properties: {
@@ -84,6 +91,12 @@ ${markdown.substring(0, 12000)}`;
                         issue: { type: "string", description: "Specific issue found" },
                         severity: { type: "string", enum: ["Low", "Medium", "High"] },
                         recommendation: { type: "string", description: "Actionable recommendation to fix the issue" },
+                        impact: { type: "string", enum: ["Low", "Medium", "High"], description: "Effect on user goals and business outcomes" },
+                        effort: { type: "string", enum: ["Low", "Medium", "High"], description: "Implementation complexity" },
+                        kpi_impact: { type: "string", description: "Business KPI most affected (e.g., Conversion Rate, Task Completion, User Retention)" },
+                        risk_level: { type: "string", enum: ["Low", "Medium", "High"], description: "Risk of not fixing this issue" },
+                        task_title: { type: "string", description: "Short actionable fix description" },
+                        task_description: { type: "string", description: "Detailed description of what needs to be done" },
                         sub_scores: {
                           type: "object",
                           properties: {
@@ -97,7 +110,7 @@ ${markdown.substring(0, 12000)}`;
                           additionalProperties: false,
                         },
                       },
-                      required: ["heuristic_name", "issue", "severity", "recommendation", "sub_scores"],
+                      required: ["heuristic_name", "issue", "severity", "recommendation", "impact", "effort", "kpi_impact", "risk_level", "task_title", "task_description", "sub_scores"],
                       additionalProperties: false,
                     },
                   },

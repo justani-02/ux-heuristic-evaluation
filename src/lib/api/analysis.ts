@@ -5,6 +5,12 @@ export type HeuristicResult = {
   issue: string;
   severity: "Low" | "Medium" | "High";
   recommendation: string;
+  impact: "Low" | "Medium" | "High";
+  effort: "Low" | "Medium" | "High";
+  kpi_impact: string;
+  risk_level: "Low" | "Medium" | "High";
+  task_title: string;
+  task_description: string;
   sub_scores: {
     "Navigation Clarity": number;
     "Information Hierarchy": number;
@@ -31,10 +37,34 @@ export type AnalysisResult = {
   created_at: string;
 };
 
+export type Task = {
+  id: string;
+  analysis_id: string;
+  task_title: string;
+  task_description: string;
+  priority: "High" | "Medium" | "Low";
+  status: "To Do" | "In Progress" | "Done";
+  linked_heuristic_name: string;
+  impact: "High" | "Medium" | "Low";
+  effort: "High" | "Medium" | "Low";
+  kpi_impact: string | null;
+  risk_level: "High" | "Medium" | "Low";
+  created_at: string;
+  updated_at: string;
+};
+
 function avgSubScore(results: HeuristicResult[], key: keyof HeuristicResult["sub_scores"]): number {
   if (!results.length) return 0;
   const sum = results.reduce((acc, r) => acc + (r.sub_scores?.[key] || 0), 0);
   return Math.round(sum / results.length);
+}
+
+function calcPriority(impact: string, effort: string): "High" | "Medium" | "Low" {
+  if (impact === "High" && effort === "Low") return "High";
+  if (impact === "High" && effort === "Medium") return "High";
+  if (impact === "Medium" && effort === "Low") return "High";
+  if (impact === "Low" && effort === "High") return "Low";
+  return "Medium";
 }
 
 export async function startAnalysis(url: string): Promise<AnalysisResult> {
@@ -97,6 +127,24 @@ export async function startAnalysis(url: string): Promise<AnalysisResult> {
 
     if (updateError || !updated) throw new Error("Failed to save results");
 
+    // Generate tasks from heuristic results
+    if (heuristicResults.length > 0) {
+      const tasks = heuristicResults.map((hr) => ({
+        analysis_id: record.id,
+        task_title: hr.task_title || `Fix: ${hr.issue.substring(0, 60)}`,
+        task_description: hr.task_description || hr.recommendation,
+        priority: calcPriority(hr.impact, hr.effort),
+        status: "To Do" as const,
+        linked_heuristic_name: hr.heuristic_name,
+        impact: hr.impact || "Medium",
+        effort: hr.effort || "Medium",
+        kpi_impact: hr.kpi_impact || null,
+        risk_level: hr.risk_level || "Medium",
+      }));
+
+      await supabase.from("tasks").insert(tasks as any);
+    }
+
     return {
       ...updated,
       heuristic_results: (updated.heuristic_violations as unknown as HeuristicResult[]) || [],
@@ -114,4 +162,47 @@ export async function getAnalysis(id: string): Promise<AnalysisResult | null> {
     ...data,
     heuristic_results: (data.heuristic_violations as unknown as HeuristicResult[]) || [],
   };
+}
+
+export async function getAllAnalyses(): Promise<AnalysisResult[]> {
+  const { data, error } = await supabase
+    .from("analyses")
+    .select()
+    .eq("status", "completed")
+    .order("created_at", { ascending: true });
+  if (error || !data) return [];
+  return data.map((d) => ({
+    ...d,
+    heuristic_results: (d.heuristic_violations as unknown as HeuristicResult[]) || [],
+  }));
+}
+
+export async function getTasksForAnalysis(analysisId: string): Promise<Task[]> {
+  const { data, error } = await supabase
+    .from("tasks")
+    .select()
+    .eq("analysis_id", analysisId)
+    .order("created_at", { ascending: true });
+  if (error || !data) return [];
+  return data as unknown as Task[];
+}
+
+export async function getAllTasks(): Promise<(Task & { analysis_url?: string })[]> {
+  const { data, error } = await supabase
+    .from("tasks")
+    .select("*, analyses(url)")
+    .order("created_at", { ascending: false });
+  if (error || !data) return [];
+  return data.map((t: any) => ({
+    ...t,
+    analysis_url: t.analyses?.url || undefined,
+  })) as (Task & { analysis_url?: string })[];
+}
+
+export async function updateTaskStatus(taskId: string, status: "To Do" | "In Progress" | "Done") {
+  const { error } = await supabase
+    .from("tasks")
+    .update({ status } as any)
+    .eq("id", taskId);
+  if (error) throw new Error(error.message);
 }
