@@ -1,16 +1,14 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { getAnalysis, type AnalysisResult } from "@/lib/api/analysis";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ScoreRing } from "@/components/ScoreRing";
-import { SeverityBadge } from "@/components/SeverityBadge";
-import { ImpactEffortMatrix } from "@/components/ImpactEffortMatrix";
 import { AppNav } from "@/components/AppNav";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, FileText, ExternalLink, AlertTriangle, Lightbulb, ListTodo } from "lucide-react";
+import { ScoreOverview } from "@/components/dashboard/ScoreOverview";
+import { SeveritySummary } from "@/components/dashboard/SeveritySummary";
+import { HeuristicTable } from "@/components/dashboard/HeuristicTable";
+import { ImpactEffortMatrix } from "@/components/ImpactEffortMatrix";
+import { ArrowLeft, FileText, ExternalLink, ListTodo } from "lucide-react";
 
 export default function Dashboard() {
   const { id } = useParams<{ id: string }>();
@@ -53,10 +51,6 @@ export default function Dashboard() {
     );
   }
 
-  const highCount = analysis.heuristic_results.filter((v) => v.severity === "High").length;
-  const medCount = analysis.heuristic_results.filter((v) => v.severity === "Medium").length;
-  const lowCount = analysis.heuristic_results.filter((v) => v.severity === "Low").length;
-
   return (
     <div className="min-h-screen bg-background">
       <AppNav />
@@ -67,7 +61,7 @@ export default function Dashboard() {
             <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="mb-2 -ml-2">
               <ArrowLeft className="w-4 h-4 mr-1" /> Back
             </Button>
-            <h1 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            <h1 className="text-2xl font-bold tracking-tight">
               {analysis.page_title || analysis.url}
             </h1>
             <a
@@ -93,124 +87,17 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Score + Sub-scores */}
-        <div className="grid md:grid-cols-6 gap-6 mb-8">
-          <Card className="md:col-span-2 border-border/50">
-            <CardContent className="p-6 flex flex-col items-center justify-center">
-              <ScoreRing score={analysis.overall_score || 0} size={140} strokeWidth={10} />
-              <p className="mt-3 text-sm font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                Overall UX Score
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="md:col-span-4 border-border/50">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                Sub-Scores
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 pt-0">
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-                <ScoreRing score={analysis.navigation_clarity_score || 0} size={72} strokeWidth={5} label="Navigation" />
-                <ScoreRing score={analysis.information_hierarchy_score || 0} size={72} strokeWidth={5} label="Hierarchy" />
-                <ScoreRing score={analysis.feedback_visibility_score || 0} size={72} strokeWidth={5} label="Feedback" />
-                <ScoreRing score={analysis.error_prevention_score || 0} size={72} strokeWidth={5} label="Error Prev." />
-                <ScoreRing score={analysis.interaction_efficiency_score || 0} size={72} strokeWidth={5} label="Efficiency" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <ScoreOverview analysis={analysis} />
 
-        {/* Summary + Screenshot */}
         {(analysis.summary || analysis.screenshot_url) && (
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
-            {analysis.summary && (
-              <Card className="border-border/50">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                    <Lightbulb className="w-4 h-4 text-primary" /> UX Insights
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{analysis.summary}</p>
-                  <div className="flex gap-4 mt-4 text-sm">
-                    <span className="text-severity-high font-medium">{highCount} High</span>
-                    <span className="text-severity-medium font-medium">{medCount} Medium</span>
-                    <span className="text-severity-low font-medium">{lowCount} Low</span>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-            {analysis.screenshot_url && (
-              <Card className="border-border/50 overflow-hidden">
-                <CardHeader>
-                  <CardTitle className="text-lg" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                    Screenshot
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <img
-                    src={analysis.screenshot_url}
-                    alt={`Screenshot of ${analysis.url}`}
-                    className="w-full h-auto max-h-64 object-cover object-top"
-                    loading="lazy"
-                  />
-                </CardContent>
-              </Card>
-            )}
-          </div>
+          <SeveritySummary analysis={analysis} />
         )}
 
-        {/* Impact vs Effort Matrix */}
         <div className="mb-8">
           <ImpactEffortMatrix results={analysis.heuristic_results} />
         </div>
 
-        {/* Heuristic Results Table */}
-        <Card className="border-border/50 mb-8">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-              <AlertTriangle className="w-4 h-4 text-primary" /> Heuristic Results
-            </CardTitle>
-            <CardDescription>{analysis.heuristic_results.length} issues found</CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[180px]">Heuristic</TableHead>
-                    <TableHead>Issue</TableHead>
-                    <TableHead className="w-[80px]">Severity</TableHead>
-                    <TableHead className="w-[80px]">Impact</TableHead>
-                    <TableHead className="w-[80px]">Effort</TableHead>
-                    <TableHead className="w-[120px]">KPI</TableHead>
-                    <TableHead>Recommendation</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {analysis.heuristic_results.map((v, i) => (
-                    <TableRow key={i}>
-                      <TableCell className="font-medium text-sm">{v.heuristic_name}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{v.issue}</TableCell>
-                      <TableCell>
-                        <SeverityBadge severity={v.severity} />
-                      </TableCell>
-                      <TableCell>
-                        <SeverityBadge severity={v.impact || "Medium"} />
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="text-xs">{v.effort || "Medium"}</Badge>
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{v.kpi_impact || "–"}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{v.recommendation}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+        <HeuristicTable results={analysis.heuristic_results} />
       </div>
     </div>
   );

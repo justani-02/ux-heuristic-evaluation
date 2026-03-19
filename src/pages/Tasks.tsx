@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { AppNav } from "@/components/AppNav";
 import { getAllTasks, updateTaskStatus, type Task } from "@/lib/api/analysis";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PriorityBadge } from "@/components/PriorityBadge";
 import { SeverityBadge } from "@/components/SeverityBadge";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle2, Circle, Clock, ListTodo, Filter } from "lucide-react";
+import { CheckCircle2, Circle, Clock, ListTodo, Filter, Target, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const statusIcons = {
@@ -64,9 +65,7 @@ export default function Tasks() {
       <AppNav />
       <div className="container mx-auto px-6 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            UX Tasks
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight">UX Tasks</h1>
           <p className="text-muted-foreground text-sm mt-1">
             Actionable tasks generated from heuristic analysis
           </p>
@@ -74,33 +73,21 @@ export default function Tasks() {
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mb-6">
-          <Card className="border-border/50">
-            <CardContent className="p-4 flex items-center gap-3">
-              <Circle className="w-5 h-5 text-muted-foreground" />
-              <div>
-                <p className="text-2xl font-bold">{todoCount}</p>
-                <p className="text-xs text-muted-foreground">To Do</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-border/50">
-            <CardContent className="p-4 flex items-center gap-3">
-              <Clock className="w-5 h-5 text-[hsl(var(--severity-medium))]" />
-              <div>
-                <p className="text-2xl font-bold">{inProgressCount}</p>
-                <p className="text-xs text-muted-foreground">In Progress</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-border/50">
-            <CardContent className="p-4 flex items-center gap-3">
-              <CheckCircle2 className="w-5 h-5 text-[hsl(var(--severity-low))]" />
-              <div>
-                <p className="text-2xl font-bold">{doneCount}</p>
-                <p className="text-xs text-muted-foreground">Done</p>
-              </div>
-            </CardContent>
-          </Card>
+          {[
+            { label: "To Do", count: todoCount, Icon: Circle, color: "text-muted-foreground" },
+            { label: "In Progress", count: inProgressCount, Icon: Clock, color: "text-[hsl(var(--severity-medium))]" },
+            { label: "Done", count: doneCount, Icon: CheckCircle2, color: "text-[hsl(var(--severity-low))]" },
+          ].map(({ label, count, Icon, color }) => (
+            <Card key={label} className="border-border/50">
+              <CardContent className="p-4 flex items-center gap-3">
+                <Icon className={cn("w-5 h-5", color)} />
+                <div>
+                  <p className="text-2xl font-bold">{count}</p>
+                  <p className="text-xs text-muted-foreground">{label}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         {/* Filters */}
@@ -153,39 +140,45 @@ export default function Tasks() {
             {filtered.map((task) => {
               const StatusIcon = statusIcons[task.status];
               return (
-                <Card key={task.id} className={cn("border-border/50 transition-all", task.status === "Done" && "opacity-60")}>
+                <Card
+                  key={task.id}
+                  className={cn(
+                    "border-border/50 transition-all hover:shadow-sm",
+                    task.status === "Done" && "opacity-60"
+                  )}
+                >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-1.5">
                           <StatusIcon className={cn("w-4 h-4 shrink-0", statusColors[task.status])} />
                           <h3 className={cn("font-semibold text-sm", task.status === "Done" && "line-through")}>
                             {task.task_title}
                           </h3>
+                          <PriorityBadge priority={task.priority} />
                         </div>
-                        <p className="text-sm text-muted-foreground mb-2 pl-6">{task.task_description}</p>
-                        <div className="flex flex-wrap gap-2 pl-6">
-                          <SeverityBadge severity={task.priority} />
-                          <Badge variant="outline" className="text-xs">
-                            Impact: {task.impact}
+                        <p className="text-sm text-muted-foreground mb-3 pl-6">{task.task_description}</p>
+                        <div className="flex flex-wrap gap-1.5 pl-6">
+                          <Badge variant="outline" className="text-[10px] gap-1 px-2 py-0.5">
+                            <Target className="w-3 h-3" /> Impact: {task.impact}
                           </Badge>
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="text-[10px] px-2 py-0.5">
                             Effort: {task.effort}
                           </Badge>
                           {task.kpi_impact && (
-                            <Badge variant="secondary" className="text-xs">
+                            <Badge variant="secondary" className="text-[10px] px-2 py-0.5">
                               {task.kpi_impact}
                             </Badge>
                           )}
-                          <Badge variant="outline" className="text-xs">
-                            Risk: {task.risk_level}
+                          <Badge variant="outline" className="text-[10px] gap-1 px-2 py-0.5">
+                            <AlertTriangle className="w-3 h-3" /> Risk: {task.risk_level}
                           </Badge>
-                          <Badge variant="outline" className="text-xs font-normal text-muted-foreground">
+                          <Badge variant="outline" className="text-[10px] font-normal text-muted-foreground px-2 py-0.5">
                             {task.linked_heuristic_name}
                           </Badge>
                         </div>
                         {task.analysis_url && (
-                          <p className="text-xs text-muted-foreground mt-2 pl-6 truncate">{task.analysis_url}</p>
+                          <p className="text-[10px] text-muted-foreground mt-2 pl-6 truncate">{task.analysis_url}</p>
                         )}
                       </div>
                       <Select
