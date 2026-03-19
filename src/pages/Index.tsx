@@ -184,6 +184,8 @@ export default function Index() {
           © 2026 | Built by Ananya Chandraker based on Jakob Nielsen's 10 Usability Heuristics
         </p>
       </footer>
+      </>
+      )}
     </div>
   );
 }
