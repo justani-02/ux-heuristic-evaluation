@@ -9,6 +9,7 @@ import { SeveritySummary } from "@/components/dashboard/SeveritySummary";
 import { HeuristicTable } from "@/components/dashboard/HeuristicTable";
 import { ImpactEffortMatrix } from "@/components/ImpactEffortMatrix";
 import { ArrowLeft, FileText, ExternalLink, ListTodo } from "lucide-react";
+import { UXImpactSummaryCard } from "@/components/UXImpactSummaryCard";
 
 export default function Dashboard() {
   const { id } = useParams<{ id: string }>();
@@ -86,6 +87,8 @@ export default function Dashboard() {
             </Button>
           </div>
         </div>
+
+        <UXImpactSummaryCard results={analysis.heuristic_results} />
 
         <ScoreOverview analysis={analysis} />
 

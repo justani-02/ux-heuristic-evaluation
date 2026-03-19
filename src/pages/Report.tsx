@@ -10,6 +10,7 @@ import { SeverityBadge } from "@/components/SeverityBadge";
 import { AppNav } from "@/components/AppNav";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Printer, ExternalLink } from "lucide-react";
+import { UXImpactSummaryCard } from "@/components/UXImpactSummaryCard";
 
 export default function Report() {
   const { id } = useParams<{ id: string }>();
@@ -79,6 +80,8 @@ export default function Report() {
         </div>
 
         <Separator className="mb-8" />
+
+        <UXImpactSummaryCard results={analysis.heuristic_results} />
 
         <section className="mb-8">
           <h2 className="text-xl font-bold mb-3" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Executive Summary</h2>
