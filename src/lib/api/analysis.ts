@@ -98,6 +98,7 @@ export async function startAnalysis(
       .update({ status: "analyzing", screenshot_url: screenshotUrl, page_title: pageTitle })
       .eq("id", record.id);
 
+    onProgress?.("analyzing");
     const { data: analysisData, error: analysisError } = await supabase.functions.invoke(
       "ux-analyze",
       { body: { url, markdown, screenshot_url: screenshotUrl } }
