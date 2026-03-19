@@ -110,6 +110,7 @@ export async function startAnalysis(
     const result = analysisData.data;
     const heuristicResults: HeuristicResult[] = result.heuristic_results || [];
 
+    onProgress?.("generating");
     const { data: updated, error: updateError } = await supabase
       .from("analyses")
       .update({
