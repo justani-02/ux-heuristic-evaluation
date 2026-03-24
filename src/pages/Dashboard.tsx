@@ -8,8 +8,9 @@ import { ScoreOverview } from "@/components/dashboard/ScoreOverview";
 import { SeveritySummary } from "@/components/dashboard/SeveritySummary";
 import { HeuristicTable } from "@/components/dashboard/HeuristicTable";
 import { ImpactEffortMatrix } from "@/components/ImpactEffortMatrix";
-import { ArrowLeft, FileText, ExternalLink, ListTodo } from "lucide-react";
+import { ArrowLeft, FileText, ExternalLink, ListTodo, GitCompareArrows } from "lucide-react";
 import { UXImpactSummaryCard } from "@/components/UXImpactSummaryCard";
+import { KPIInputForm } from "@/components/KPIInputForm";
 
 export default function Dashboard() {
   const { id } = useParams<{ id: string }>();
@@ -101,6 +102,10 @@ export default function Dashboard() {
         </div>
 
         <HeuristicTable results={analysis.heuristic_results} />
+
+        <div className="mt-8 max-w-md">
+          <KPIInputForm analysis={analysis} onUpdated={(a) => setAnalysis(a)} label="KPI Metrics" />
+        </div>
       </div>
     </div>
   );
