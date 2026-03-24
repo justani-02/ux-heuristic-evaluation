@@ -81,6 +81,11 @@ export default function Dashboard() {
                 <ListTodo className="w-4 h-4 mr-2" /> View Tasks
               </Link>
             </Button>
+            <Button variant="outline" asChild>
+              <Link to="/compare">
+                <GitCompareArrows className="w-4 h-4 mr-2" /> Compare
+              </Link>
+            </Button>
             <Button asChild>
               <Link to={`/report/${analysis.id}`}>
                 <FileText className="w-4 h-4 mr-2" /> Full Report
