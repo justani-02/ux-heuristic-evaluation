@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { AppNav } from "@/components/AppNav";
 import { getAllAnalyses, type AnalysisResult } from "@/lib/api/analysis";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getHeuristicPerformance, type HeuristicPerformance } from "@/lib/api/learning";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, ShieldCheck } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -18,11 +20,13 @@ import { cn } from "@/lib/utils";
 
 export default function Trends() {
   const [analyses, setAnalyses] = useState<AnalysisResult[]>([]);
+  const [heuristicPerf, setHeuristicPerf] = useState<HeuristicPerformance[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getAllAnalyses().then((data) => {
+    Promise.all([getAllAnalyses(), getHeuristicPerformance()]).then(([data, perf]) => {
       setAnalyses(data);
+      setHeuristicPerf(perf);
       setLoading(false);
     });
   }, []);
@@ -238,6 +242,51 @@ export default function Trends() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Heuristic Performance */}
+            {heuristicPerf.length > 0 && (
+              <Card className="border-border/50 mt-8">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-primary" />
+                    Heuristic Performance
+                  </CardTitle>
+                  <CardDescription>Which heuristics consistently improve scores when fixed</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {heuristicPerf.slice(0, 8).map((h) => {
+                      const rate = h.times_seen > 0 ? Math.round((h.times_improved / h.times_seen) * 100) : 0;
+                      return (
+                        <div key={h.heuristic_name} className="flex items-center gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1">
+                              <p className="text-sm font-medium truncate">{h.heuristic_name}</p>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <Badge variant="outline" className="text-xs">
+                                  {h.times_improved}/{h.times_seen} fixed
+                                </Badge>
+                                {h.avg_score_delta > 0 && (
+                                  <Badge variant="outline" className="text-xs text-[hsl(var(--severity-low))] border-[hsl(var(--severity-low)/0.3)]">
+                                    +{h.avg_score_delta} avg
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            <div className="h-2 rounded-full bg-muted overflow-hidden">
+                              <div
+                                className="h-full rounded-full bg-primary transition-all"
+                                style={{ width: `${rate}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Analysis History */}
             <Card className="border-border/50 mt-8">
