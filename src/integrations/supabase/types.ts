@@ -16,7 +16,10 @@ export type Database = {
     Tables: {
       analyses: {
         Row: {
+          bounce_rate: number | null
+          conversion_rate: number | null
           created_at: string
+          drop_off_rate: number | null
           error_prevention_score: number | null
           feedback_visibility_score: number | null
           heuristic_violations: Json | null
@@ -26,15 +29,20 @@ export type Database = {
           navigation_clarity_score: number | null
           overall_score: number | null
           page_title: string | null
+          previous_analysis_id: string | null
           recommendations: Json | null
           screenshot_url: string | null
           status: string
           summary: string | null
+          task_completion_rate: number | null
           updated_at: string
           url: string
         }
         Insert: {
+          bounce_rate?: number | null
+          conversion_rate?: number | null
           created_at?: string
+          drop_off_rate?: number | null
           error_prevention_score?: number | null
           feedback_visibility_score?: number | null
           heuristic_violations?: Json | null
@@ -44,15 +52,20 @@ export type Database = {
           navigation_clarity_score?: number | null
           overall_score?: number | null
           page_title?: string | null
+          previous_analysis_id?: string | null
           recommendations?: Json | null
           screenshot_url?: string | null
           status?: string
           summary?: string | null
+          task_completion_rate?: number | null
           updated_at?: string
           url: string
         }
         Update: {
+          bounce_rate?: number | null
+          conversion_rate?: number | null
           created_at?: string
+          drop_off_rate?: number | null
           error_prevention_score?: number | null
           feedback_visibility_score?: number | null
           heuristic_violations?: Json | null
@@ -62,14 +75,24 @@ export type Database = {
           navigation_clarity_score?: number | null
           overall_score?: number | null
           page_title?: string | null
+          previous_analysis_id?: string | null
           recommendations?: Json | null
           screenshot_url?: string | null
           status?: string
           summary?: string | null
+          task_completion_rate?: number | null
           updated_at?: string
           url?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "analyses_previous_analysis_id_fkey"
+            columns: ["previous_analysis_id"]
+            isOneToOne: false
+            referencedRelation: "analyses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tasks: {
         Row: {
