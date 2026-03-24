@@ -16,10 +16,10 @@ function getScoreColor(score: number) {
 }
 
 function getScoreStroke(score: number) {
-  if (score >= 80) return "hsl(142, 71%, 45%)";
-  if (score >= 60) return "hsl(167, 72%, 44%)";
-  if (score >= 40) return "hsl(38, 92%, 50%)";
-  return "hsl(0, 84%, 60%)";
+  if (score >= 80) return "hsl(var(--score-excellent))";
+  if (score >= 60) return "hsl(var(--score-good))";
+  if (score >= 40) return "hsl(var(--score-average))";
+  return "hsl(var(--score-poor))";
 }
 
 export function ScoreRing({ score, size = 120, strokeWidth = 8, className, label }: ScoreRingProps) {
