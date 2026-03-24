@@ -1,11 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
-import { BarChart3, LayoutDashboard, ListTodo, TrendingUp } from "lucide-react";
+import { BarChart3, ListTodo, TrendingUp, GitCompareArrows } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const links = [
   { to: "/", label: "Home", icon: BarChart3 },
   { to: "/tasks", label: "Tasks", icon: ListTodo },
   { to: "/trends", label: "Trends", icon: TrendingUp },
+  { to: "/compare", label: "Compare", icon: GitCompareArrows },
 ];
 
 export function AppNav() {

@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import Report from "./pages/Report";
 import Tasks from "./pages/Tasks";
 import Trends from "./pages/Trends";
+import Compare from "./pages/Compare";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/report/:id" element={<Report />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/trends" element={<Trends />} />
+          <Route path="/compare" element={<Compare />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
