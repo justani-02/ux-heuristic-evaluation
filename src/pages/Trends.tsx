@@ -38,6 +38,17 @@ export default function Trends() {
     url: a.url,
   }));
 
+  const kpiData = analyses
+    .filter((a) => a.conversion_rate != null || a.bounce_rate != null || a.task_completion_rate != null || a.drop_off_rate != null)
+    .map((a) => ({
+      date: new Date(a.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      "Conversion %": a.conversion_rate ?? undefined,
+      "Bounce %": a.bounce_rate ?? undefined,
+      "Completion %": a.task_completion_rate ?? undefined,
+      "Drop-off %": a.drop_off_rate ?? undefined,
+      Overall: a.overall_score || 0,
+    }));
+
   const latest = analyses[analyses.length - 1];
   const previous = analyses.length > 1 ? analyses[analyses.length - 2] : null;
   const scoreDelta = latest && previous
@@ -49,11 +60,11 @@ export default function Trends() {
       <AppNav />
       <div className="container mx-auto px-6 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+          <h1 className="text-2xl font-bold tracking-tight">
             UX Score Trends
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Track usability improvements over time
+            Track usability improvements and KPI correlation over time
           </p>
         </div>
 
@@ -79,7 +90,7 @@ export default function Trends() {
               <Card className="border-border/50">
                 <CardContent className="p-4">
                   <p className="text-xs text-muted-foreground mb-1">Latest Score</p>
-                  <p className="text-3xl font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                  <p className="text-3xl font-bold">
                     {latest?.overall_score || 0}
                   </p>
                 </CardContent>
@@ -107,7 +118,7 @@ export default function Trends() {
               <Card className="border-border/50">
                 <CardContent className="p-4">
                   <p className="text-xs text-muted-foreground mb-1">Analyses Run</p>
-                  <p className="text-3xl font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                  <p className="text-3xl font-bold">
                     {analyses.length}
                   </p>
                 </CardContent>
@@ -115,7 +126,7 @@ export default function Trends() {
               <Card className="border-border/50">
                 <CardContent className="p-4">
                   <p className="text-xs text-muted-foreground mb-1">Avg Score</p>
-                  <p className="text-3xl font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                  <p className="text-3xl font-bold">
                     {Math.round(analyses.reduce((a, b) => a + (b.overall_score || 0), 0) / analyses.length)}
                   </p>
                 </CardContent>
@@ -125,7 +136,7 @@ export default function Trends() {
             {/* Overall Score Line Chart */}
             <Card className="border-border/50 mb-8">
               <CardHeader>
-                <CardTitle className="text-lg" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                <CardTitle className="text-lg">
                   Overall UX Score Over Time
                 </CardTitle>
               </CardHeader>
@@ -158,10 +169,46 @@ export default function Trends() {
               </CardContent>
             </Card>
 
+            {/* KPI Trends */}
+            {kpiData.length > 0 && (
+              <Card className="border-border/50 mb-8">
+                <CardHeader>
+                  <CardTitle className="text-lg">
+                    KPI Trends & UX Score Correlation
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={kpiData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis dataKey="date" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
+                        <YAxis tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
+                        <Tooltip
+                          contentStyle={{
+                            background: "hsl(var(--card))",
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: "8px",
+                            fontSize: "12px",
+                          }}
+                        />
+                        <Legend />
+                        <Line type="monotone" dataKey="Overall" stroke="hsl(var(--primary))" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                        <Line type="monotone" dataKey="Conversion %" stroke="hsl(142, 71%, 45%)" strokeWidth={2} dot={{ r: 3 }} />
+                        <Line type="monotone" dataKey="Bounce %" stroke="hsl(0, 84%, 60%)" strokeWidth={2} dot={{ r: 3 }} />
+                        <Line type="monotone" dataKey="Completion %" stroke="hsl(167, 72%, 44%)" strokeWidth={2} dot={{ r: 3 }} />
+                        <Line type="monotone" dataKey="Drop-off %" stroke="hsl(38, 92%, 50%)" strokeWidth={2} dot={{ r: 3 }} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Sub-score Trends */}
             <Card className="border-border/50">
               <CardHeader>
-                <CardTitle className="text-lg" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                <CardTitle className="text-lg">
                   Sub-Score Trends
                 </CardTitle>
               </CardHeader>
@@ -195,7 +242,7 @@ export default function Trends() {
             {/* Analysis History */}
             <Card className="border-border/50 mt-8">
               <CardHeader>
-                <CardTitle className="text-lg" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                <CardTitle className="text-lg">
                   Analysis History
                 </CardTitle>
               </CardHeader>
@@ -215,7 +262,7 @@ export default function Trends() {
                         <span className="text-xs text-muted-foreground">
                           {new Date(a.created_at).toLocaleDateString()}
                         </span>
-                        <span className="text-sm font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                        <span className="text-sm font-bold">
                           {a.overall_score}
                         </span>
                       </div>
