@@ -35,6 +35,11 @@ export type AnalysisResult = {
   heuristic_results: HeuristicResult[];
   status: string;
   created_at: string;
+  conversion_rate: number | null;
+  bounce_rate: number | null;
+  task_completion_rate: number | null;
+  drop_off_rate: number | null;
+  previous_analysis_id: string | null;
 };
 
 export type Task = {
@@ -53,6 +58,8 @@ export type Task = {
   updated_at: string;
 };
 
+export type ValidationStatus = "Improved" | "Partially Improved" | "No Impact";
+
 function avgSubScore(results: HeuristicResult[], key: keyof HeuristicResult["sub_scores"]): number {
   if (!results.length) return 0;
   const sum = results.reduce((acc, r) => acc + (r.sub_scores?.[key] || 0), 0);
@@ -67,13 +74,29 @@ function calcPriority(impact: string, effort: string): "High" | "Medium" | "Low"
   return "Medium";
 }
 
+function mapAnalysis(data: any): AnalysisResult {
+  return {
+    ...data,
+    heuristic_results: (data.heuristic_violations as unknown as HeuristicResult[]) || [],
+    conversion_rate: data.conversion_rate ?? null,
+    bounce_rate: data.bounce_rate ?? null,
+    task_completion_rate: data.task_completion_rate ?? null,
+    drop_off_rate: data.drop_off_rate ?? null,
+    previous_analysis_id: data.previous_analysis_id ?? null,
+  };
+}
+
 export async function startAnalysis(
   url: string,
-  onProgress?: (stage: "scraping" | "analyzing" | "generating") => void
+  onProgress?: (stage: "scraping" | "analyzing" | "generating") => void,
+  previousAnalysisId?: string
 ): Promise<AnalysisResult> {
+  const insertData: any = { url, status: "scraping" };
+  if (previousAnalysisId) insertData.previous_analysis_id = previousAnalysisId;
+
   const { data: record, error: insertError } = await supabase
     .from("analyses")
-    .insert({ url, status: "scraping" })
+    .insert(insertData)
     .select()
     .single();
 
@@ -133,7 +156,6 @@ export async function startAnalysis(
 
     if (updateError || !updated) throw new Error("Failed to save results");
 
-    // Generate tasks from heuristic results
     if (heuristicResults.length > 0) {
       const tasks = heuristicResults.map((hr) => ({
         analysis_id: record.id,
@@ -151,10 +173,7 @@ export async function startAnalysis(
       await supabase.from("tasks").insert(tasks as any);
     }
 
-    return {
-      ...updated,
-      heuristic_results: (updated.heuristic_violations as unknown as HeuristicResult[]) || [],
-    };
+    return mapAnalysis(updated);
   } catch (err) {
     await supabase.from("analyses").update({ status: "failed" }).eq("id", record.id);
     throw err;
@@ -164,10 +183,7 @@ export async function startAnalysis(
 export async function getAnalysis(id: string): Promise<AnalysisResult | null> {
   const { data, error } = await supabase.from("analyses").select().eq("id", id).single();
   if (error || !data) return null;
-  return {
-    ...data,
-    heuristic_results: (data.heuristic_violations as unknown as HeuristicResult[]) || [],
-  };
+  return mapAnalysis(data);
 }
 
 export async function getAllAnalyses(): Promise<AnalysisResult[]> {
@@ -177,10 +193,26 @@ export async function getAllAnalyses(): Promise<AnalysisResult[]> {
     .eq("status", "completed")
     .order("created_at", { ascending: true });
   if (error || !data) return [];
-  return data.map((d) => ({
-    ...d,
-    heuristic_results: (d.heuristic_violations as unknown as HeuristicResult[]) || [],
-  }));
+  return data.map(mapAnalysis);
+}
+
+export async function getAnalysesByUrl(url: string): Promise<AnalysisResult[]> {
+  const { data, error } = await supabase
+    .from("analyses")
+    .select()
+    .eq("url", url)
+    .eq("status", "completed")
+    .order("created_at", { ascending: true });
+  if (error || !data) return [];
+  return data.map(mapAnalysis);
+}
+
+export async function updateAnalysisKPIs(
+  id: string,
+  kpis: { conversion_rate?: number; bounce_rate?: number; task_completion_rate?: number; drop_off_rate?: number }
+) {
+  const { error } = await supabase.from("analyses").update(kpis as any).eq("id", id);
+  if (error) throw new Error(error.message);
 }
 
 export async function getTasksForAnalysis(analysisId: string): Promise<Task[]> {
@@ -211,4 +243,30 @@ export async function updateTaskStatus(taskId: string, status: "To Do" | "In Pro
     .update({ status } as any)
     .eq("id", taskId);
   if (error) throw new Error(error.message);
+}
+
+export function computeValidationStatus(
+  baseline: AnalysisResult,
+  updated: AnalysisResult
+): ValidationStatus {
+  const scoreDelta = (updated.overall_score || 0) - (baseline.overall_score || 0);
+  const kpiImproved =
+    (updated.conversion_rate != null && baseline.conversion_rate != null && updated.conversion_rate > baseline.conversion_rate) ||
+    (updated.bounce_rate != null && baseline.bounce_rate != null && updated.bounce_rate < baseline.bounce_rate) ||
+    (updated.task_completion_rate != null && baseline.task_completion_rate != null && updated.task_completion_rate > baseline.task_completion_rate) ||
+    (updated.drop_off_rate != null && baseline.drop_off_rate != null && updated.drop_off_rate < baseline.drop_off_rate);
+
+  if (scoreDelta > 0 && kpiImproved) return "Improved";
+  if (scoreDelta > 0 || kpiImproved) return "Partially Improved";
+  return "No Impact";
+}
+
+export function getResolvedIssues(baseline: AnalysisResult, updated: AnalysisResult): HeuristicResult[] {
+  const updatedIssues = new Set(updated.heuristic_results.map((r) => r.heuristic_name + ":" + r.issue));
+  return baseline.heuristic_results.filter((r) => !updatedIssues.has(r.heuristic_name + ":" + r.issue));
+}
+
+export function getNewIssues(baseline: AnalysisResult, updated: AnalysisResult): HeuristicResult[] {
+  const baselineIssues = new Set(baseline.heuristic_results.map((r) => r.heuristic_name + ":" + r.issue));
+  return updated.heuristic_results.filter((r) => !baselineIssues.has(r.heuristic_name + ":" + r.issue));
 }
