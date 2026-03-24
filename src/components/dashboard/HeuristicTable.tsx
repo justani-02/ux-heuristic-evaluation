@@ -16,6 +16,12 @@ function calcPriority(impact: string, effort: string): "High" | "Medium" | "Low"
 }
 
 export function HeuristicTable({ results }: { results: HeuristicResult[] }) {
+  const [confidenceMap, setConfidenceMap] = useState<Map<string, { level: ConfidenceLevel; count: number }>>(new Map());
+
+  useEffect(() => {
+    getConfidenceMap().then(setConfidenceMap);
+  }, []);
+
   return (
     <Card className="border-border/50 mb-8">
       <CardHeader>
@@ -35,31 +41,42 @@ export function HeuristicTable({ results }: { results: HeuristicResult[] }) {
                 <TableHead className="w-[90px]">Priority</TableHead>
                 <TableHead className="w-[80px]">Impact</TableHead>
                 <TableHead className="w-[80px]">Effort</TableHead>
+                <TableHead className="w-[100px]">Confidence</TableHead>
                 <TableHead className="w-[120px]">KPI</TableHead>
                 <TableHead>Recommendation</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {results.map((v, i) => (
-                <TableRow key={i}>
-                  <TableCell className="font-medium text-sm">{v.heuristic_name}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{v.issue}</TableCell>
-                  <TableCell>
-                    <SeverityBadge severity={v.severity} />
-                  </TableCell>
-                  <TableCell>
-                    <PriorityBadge priority={calcPriority(v.impact || "Medium", v.effort || "Medium")} />
-                  </TableCell>
-                  <TableCell>
-                    <SeverityBadge severity={v.impact || "Medium"} />
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="text-xs">{v.effort || "Medium"}</Badge>
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{v.kpi_impact || "–"}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{v.recommendation}</TableCell>
-                </TableRow>
-              ))}
+              {results.map((v, i) => {
+                const conf = confidenceMap.get(v.heuristic_name);
+                return (
+                  <TableRow key={i}>
+                    <TableCell className="font-medium text-sm">{v.heuristic_name}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{v.issue}</TableCell>
+                    <TableCell>
+                      <SeverityBadge severity={v.severity} />
+                    </TableCell>
+                    <TableCell>
+                      <PriorityBadge priority={calcPriority(v.impact || "Medium", v.effort || "Medium")} />
+                    </TableCell>
+                    <TableCell>
+                      <SeverityBadge severity={v.impact || "Medium"} />
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-xs">{v.effort || "Medium"}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {conf ? (
+                        <ConfidenceBadge level={conf.level} count={conf.count} compact />
+                      ) : (
+                        <ConfidenceBadge level="Low" count={0} compact />
+                      )}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{v.kpi_impact || "–"}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{v.recommendation}</TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>

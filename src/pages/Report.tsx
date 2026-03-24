@@ -17,6 +17,7 @@ export default function Report() {
   const navigate = useNavigate();
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(true);
+  const [confidenceMap, setConfidenceMap] = useState<Map<string, { level: ConfidenceLevel; count: number }>>(new Map());
 
   useEffect(() => {
     if (!id) return;
@@ -24,6 +25,7 @@ export default function Report() {
       setAnalysis(data);
       setLoading(false);
     });
+    getConfidenceMap().then(setConfidenceMap);
   }, [id]);
 
   if (loading) {
@@ -137,10 +139,14 @@ export default function Report() {
                     <span className="font-medium text-primary">Fix:</span> {v.recommendation}
                   </p>
                   <div className="flex flex-wrap gap-2 mb-2">
-                    <Badge variant="outline" className="text-xs">Impact: {v.impact || "–"}</Badge>
-                    <Badge variant="outline" className="text-xs">Effort: {v.effort || "–"}</Badge>
-                    {v.kpi_impact && <Badge variant="secondary" className="text-xs">{v.kpi_impact}</Badge>}
-                  </div>
+                     <Badge variant="outline" className="text-xs">Impact: {v.impact || "–"}</Badge>
+                     <Badge variant="outline" className="text-xs">Effort: {v.effort || "–"}</Badge>
+                     {v.kpi_impact && <Badge variant="secondary" className="text-xs">{v.kpi_impact}</Badge>}
+                     {(() => {
+                       const conf = confidenceMap.get(v.heuristic_name);
+                       return conf ? <ConfidenceBadge level={conf.level} count={conf.count} /> : <ConfidenceBadge level="Low" count={0} />;
+                     })()}
+                   </div>
                   <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
                     <span>Nav: <strong className="text-foreground">{v.sub_scores?.["Navigation Clarity"] ?? "–"}</strong></span>
                     <span>Info: <strong className="text-foreground">{v.sub_scores?.["Information Hierarchy"] ?? "–"}</strong></span>
