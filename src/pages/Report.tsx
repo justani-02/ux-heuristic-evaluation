@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScoreRing } from "@/components/ScoreRing";
 import { SeverityBadge } from "@/components/SeverityBadge";
+import { ConfidenceBadge } from "@/components/ConfidenceBadge";
 import { AppNav } from "@/components/AppNav";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Printer, ExternalLink } from "lucide-react";
 import { UXImpactSummaryCard } from "@/components/UXImpactSummaryCard";
+import { getConfidenceMap, type ConfidenceLevel } from "@/lib/api/learning";
 
 export default function Report() {
   const { id } = useParams<{ id: string }>();

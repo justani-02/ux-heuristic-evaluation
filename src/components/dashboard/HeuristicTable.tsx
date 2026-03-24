@@ -1,10 +1,13 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { SeverityBadge } from "@/components/SeverityBadge";
 import { PriorityBadge } from "@/components/PriorityBadge";
+import { ConfidenceBadge } from "@/components/ConfidenceBadge";
 import { AlertTriangle } from "lucide-react";
 import type { HeuristicResult } from "@/lib/api/analysis";
+import { getConfidenceMap, type ConfidenceLevel } from "@/lib/api/learning";
 import { cn } from "@/lib/utils";
 
 function calcPriority(impact: string, effort: string): "High" | "Medium" | "Low" {
