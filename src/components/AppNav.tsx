@@ -1,6 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
-import { BarChart3, ListTodo, TrendingUp, GitCompareArrows } from "lucide-react";
+import { BarChart3, ListTodo, TrendingUp, GitCompareArrows, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/hooks/use-theme";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const links = [
   { to: "/", label: "Home", icon: BarChart3 },
@@ -11,6 +14,7 @@ const links = [
 
 export function AppNav() {
   const location = useLocation();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <nav className="border-b border-border/50 backdrop-blur-sm bg-background/80 sticky top-0 z-50 print:hidden">
@@ -42,6 +46,18 @@ export function AppNav() {
               </Link>
             );
           })}
+          <div className="ml-2 pl-2 border-l border-border/50">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9">
+                  {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">
+                Switch to {theme === "dark" ? "light" : "dark"} mode
+              </TooltipContent>
+            </Tooltip>
+          </div>
         </div>
       </div>
     </nav>
