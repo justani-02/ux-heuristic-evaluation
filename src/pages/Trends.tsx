@@ -157,7 +157,9 @@ export default function Trends() {
                           border: "1px solid hsl(var(--border))",
                           borderRadius: "8px",
                           fontSize: "12px",
+                          color: "hsl(var(--card-foreground))",
                         }}
+                        labelStyle={{ color: "hsl(var(--muted-foreground))" }}
                       />
                       <Line
                         type="monotone"
@@ -194,14 +196,16 @@ export default function Trends() {
                             border: "1px solid hsl(var(--border))",
                             borderRadius: "8px",
                             fontSize: "12px",
+                            color: "hsl(var(--card-foreground))",
                           }}
+                          labelStyle={{ color: "hsl(var(--muted-foreground))" }}
                         />
                         <Legend />
                         <Line type="monotone" dataKey="Overall" stroke="hsl(var(--primary))" strokeWidth={2} strokeDasharray="5 5" dot={false} />
-                        <Line type="monotone" dataKey="Conversion %" stroke="hsl(142, 71%, 45%)" strokeWidth={2} dot={{ r: 3 }} />
-                        <Line type="monotone" dataKey="Bounce %" stroke="hsl(0, 84%, 60%)" strokeWidth={2} dot={{ r: 3 }} />
-                        <Line type="monotone" dataKey="Completion %" stroke="hsl(167, 72%, 44%)" strokeWidth={2} dot={{ r: 3 }} />
-                        <Line type="monotone" dataKey="Drop-off %" stroke="hsl(38, 92%, 50%)" strokeWidth={2} dot={{ r: 3 }} />
+                        <Line type="monotone" dataKey="Conversion %" stroke="hsl(var(--severity-low))" strokeWidth={2} dot={{ r: 3 }} />
+                        <Line type="monotone" dataKey="Bounce %" stroke="hsl(var(--severity-high))" strokeWidth={2} dot={{ r: 3 }} />
+                        <Line type="monotone" dataKey="Completion %" stroke="hsl(var(--accent))" strokeWidth={2} dot={{ r: 3 }} />
+                        <Line type="monotone" dataKey="Drop-off %" stroke="hsl(var(--severity-medium))" strokeWidth={2} dot={{ r: 3 }} />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
@@ -229,14 +233,16 @@ export default function Trends() {
                           border: "1px solid hsl(var(--border))",
                           borderRadius: "8px",
                           fontSize: "12px",
+                          color: "hsl(var(--card-foreground))",
                         }}
+                        labelStyle={{ color: "hsl(var(--muted-foreground))" }}
                       />
                       <Legend />
-                      <Line type="monotone" dataKey="Navigation" stroke="hsl(243, 75%, 59%)" strokeWidth={2} dot={false} />
-                      <Line type="monotone" dataKey="Hierarchy" stroke="hsl(167, 72%, 44%)" strokeWidth={2} dot={false} />
-                      <Line type="monotone" dataKey="Feedback" stroke="hsl(38, 92%, 50%)" strokeWidth={2} dot={false} />
-                      <Line type="monotone" dataKey="Error Prev." stroke="hsl(0, 84%, 60%)" strokeWidth={2} dot={false} />
-                      <Line type="monotone" dataKey="Efficiency" stroke="hsl(280, 65%, 60%)" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="Navigation" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="Hierarchy" stroke="hsl(var(--accent))" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="Feedback" stroke="hsl(var(--severity-medium))" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="Error Prev." stroke="hsl(var(--severity-high))" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="Efficiency" stroke="hsl(280, 65%, 65%)" strokeWidth={2} dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
