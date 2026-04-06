@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { startAnalysis } from "@/lib/api/analysis";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { AppNav } from "@/components/AppNav";
 import { AnalysisProgress, type AnalysisStage } from "@/components/AnalysisProgress";
-import { Search, FileText, Zap, Shield, Eye, ArrowRight, Loader2, Target, TrendingUp } from "lucide-react";
+import { Search, FileText, Zap, Shield, Eye, ArrowRight, Loader2, Target, TrendingUp, LogIn } from "lucide-react";
 
 const HEURISTICS = [
   { icon: Eye, title: "Visibility of Status", desc: "Is the system keeping users informed?" },
