@@ -1,11 +1,12 @@
 import { Check, Globe, Brain, FileText, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type AnalysisStage = "scraping" | "analyzing" | "generating";
+export type AnalysisStage = "scraping" | "analyzing" | "consistency" | "generating";
 
 const STAGES: { key: AnalysisStage; label: string; icon: typeof Globe; desc: string }[] = [
   { key: "scraping", label: "Scraping", icon: Globe, desc: "Fetching page content & screenshots…" },
   { key: "analyzing", label: "Analyzing", icon: Brain, desc: "Evaluating against 10 heuristics…" },
+  { key: "consistency", label: "Consistency Check", icon: Brain, desc: "Running consistency checks…" },
   { key: "generating", label: "Generating Report", icon: FileText, desc: "Building insights & tasks…" },
 ];
 

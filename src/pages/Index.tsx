@@ -3,12 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { startAnalysis } from "@/lib/api/analysis";
+import { startAnalysis, type AnalysisMode } from "@/lib/api/analysis";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppNav } from "@/components/AppNav";
 import { AnalysisProgress, type AnalysisStage } from "@/components/AnalysisProgress";
 import { Search, FileText, Zap, Shield, Eye, ArrowRight, Loader2, Target, TrendingUp, LogIn } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const HEURISTICS = [
   { icon: Eye, title: "Visibility of Status", desc: "Is the system keeping users informed?" },
@@ -32,6 +33,7 @@ export default function Index() {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [stage, setStage] = useState<AnalysisStage>("scraping");
+  const [mode, setMode] = useState<AnalysisMode>("fast");
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -46,7 +48,7 @@ export default function Index() {
     setLoading(true);
     setStage("scraping");
     try {
-      const result = await startAnalysis(url.trim(), (s) => setStage(s));
+      const result = await startAnalysis(url.trim(), (s) => setStage(s), undefined, mode);
       navigate(`/dashboard/${result.id}`);
     } catch (err: any) {
       toast({
@@ -116,6 +118,37 @@ export default function Index() {
               )}
             </Button>
           </form>
+
+          {/* Mode Toggle */}
+          <div className="flex items-center justify-center gap-2 mt-4">
+            <span className="text-xs text-muted-foreground">Mode:</span>
+            <div className="inline-flex rounded-lg border border-border/60 p-0.5 bg-muted/30">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => setMode("fast")}
+                    className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${mode === "fast" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    ⚡ Fast
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Single run — faster results</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => setMode("reliable")}
+                    className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${mode === "reliable" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    🛡️ Reliable
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>3 parallel runs with consensus — higher confidence</TooltipContent>
+              </Tooltip>
+            </div>
+          </div>
         </div>
       </section>
 

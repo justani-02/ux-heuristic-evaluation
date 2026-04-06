@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { getAnalysis, type AnalysisResult } from "@/lib/api/analysis";
+import { getAnalysis, getAnalysisRuns, type AnalysisResult, type AnalysisRun } from "@/lib/api/analysis";
 import { Button } from "@/components/ui/button";
 import { AppNav } from "@/components/AppNav";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -8,6 +8,7 @@ import { ScoreOverview } from "@/components/dashboard/ScoreOverview";
 import { SeveritySummary } from "@/components/dashboard/SeveritySummary";
 import { HeuristicTable } from "@/components/dashboard/HeuristicTable";
 import { ImpactEffortMatrix } from "@/components/ImpactEffortMatrix";
+import { TrustConfidenceSection } from "@/components/TrustConfidenceSection";
 import { ArrowLeft, FileText, ExternalLink, ListTodo, GitCompareArrows } from "lucide-react";
 import { UXImpactSummaryCard } from "@/components/UXImpactSummaryCard";
 import { KPIInputForm } from "@/components/KPIInputForm";
@@ -18,12 +19,17 @@ export default function Dashboard() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
+  const [runs, setRuns] = useState<AnalysisRun[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!id) return;
-    getAnalysis(id).then((data) => {
+    Promise.all([
+      getAnalysis(id),
+      getAnalysisRuns(id),
+    ]).then(([data, runsData]) => {
       setAnalysis(data);
+      setRuns(runsData);
       setLoading(false);
     });
   }, [id]);
@@ -96,6 +102,8 @@ export default function Dashboard() {
           </div>
         </div>
 
+        <TrustConfidenceSection analysis={analysis} runs={runs} />
+
         <LearningSummaryCard />
 
         <UXImpactSummaryCard results={analysis.heuristic_results} />
@@ -110,7 +118,7 @@ export default function Dashboard() {
           <ImpactEffortMatrix results={analysis.heuristic_results} />
         </div>
 
-        <HeuristicTable results={analysis.heuristic_results} />
+        <HeuristicTable results={analysis.heuristic_results} runCount={analysis.run_count ?? 1} />
 
         <TopPerformingFixes />
 

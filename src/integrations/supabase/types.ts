@@ -16,7 +16,9 @@ export type Database = {
     Tables: {
       analyses: {
         Row: {
+          analysis_mode: string | null
           bounce_rate: number | null
+          confidence_score: number | null
           conversion_rate: number | null
           created_at: string
           drop_off_rate: number | null
@@ -31,6 +33,7 @@ export type Database = {
           page_title: string | null
           previous_analysis_id: string | null
           recommendations: Json | null
+          run_count: number | null
           screenshot_url: string | null
           status: string
           summary: string | null
@@ -40,7 +43,9 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          analysis_mode?: string | null
           bounce_rate?: number | null
+          confidence_score?: number | null
           conversion_rate?: number | null
           created_at?: string
           drop_off_rate?: number | null
@@ -55,6 +60,7 @@ export type Database = {
           page_title?: string | null
           previous_analysis_id?: string | null
           recommendations?: Json | null
+          run_count?: number | null
           screenshot_url?: string | null
           status?: string
           summary?: string | null
@@ -64,7 +70,9 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          analysis_mode?: string | null
           bounce_rate?: number | null
+          confidence_score?: number | null
           conversion_rate?: number | null
           created_at?: string
           drop_off_rate?: number | null
@@ -79,6 +87,7 @@ export type Database = {
           page_title?: string | null
           previous_analysis_id?: string | null
           recommendations?: Json | null
+          run_count?: number | null
           screenshot_url?: string | null
           status?: string
           summary?: string | null
@@ -91,6 +100,44 @@ export type Database = {
           {
             foreignKeyName: "analyses_previous_analysis_id_fkey"
             columns: ["previous_analysis_id"]
+            isOneToOne: false
+            referencedRelation: "analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      analysis_runs: {
+        Row: {
+          analysis_id: string
+          created_at: string
+          id: string
+          overall_score: number | null
+          raw_output: Json
+          run_index: number
+          user_id: string | null
+        }
+        Insert: {
+          analysis_id: string
+          created_at?: string
+          id?: string
+          overall_score?: number | null
+          raw_output?: Json
+          run_index?: number
+          user_id?: string | null
+        }
+        Update: {
+          analysis_id?: string
+          created_at?: string
+          id?: string
+          overall_score?: number | null
+          raw_output?: Json
+          run_index?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analysis_runs_analysis_id_fkey"
+            columns: ["analysis_id"]
             isOneToOne: false
             referencedRelation: "analyses"
             referencedColumns: ["id"]

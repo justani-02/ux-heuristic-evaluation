@@ -6,6 +6,82 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const systemPrompt = `You are an expert UX researcher, usability analyst, and product strategist. You evaluate websites using Jakob Nielsen's 10 Usability Heuristics and provide actionable decision intelligence.
+
+Given website content, analyze it and return structured JSON data via the provided tool.
+
+For each of the 10 heuristics, identify specific issues found on the website. Be specific and actionable. Rate severity as "Low", "Medium", or "High".
+
+For each heuristic result, also provide:
+- sub_scores (0-100) for: Navigation Clarity, Information Hierarchy, Feedback Visibility, Error Prevention, Interaction Efficiency
+- impact: "High", "Medium", or "Low" — based on how much this issue affects user goals and business outcomes
+- effort: "High", "Medium", or "Low" — based on implementation complexity to fix
+- kpi_impact: which business KPI this most affects (e.g., "Conversion Rate", "Task Completion", "User Retention", "Bounce Rate", "Time on Task", "Error Rate")
+- risk_level: "High", "Medium", or "Low" — the risk of NOT fixing this issue
+- task_title: a short actionable fix description (e.g., "Add breadcrumb navigation")
+- task_description: a detailed description of what needs to be done to fix this issue
+- why_flagged: a concise explanation (1-2 sentences) of why this issue was detected based on the heuristic principle
+- evidence: a specific UI/content observation from the website that proves this issue exists (e.g., "No loading indicator found on form submission", "Navigation menu has 12+ items with no grouping")
+
+Also generate:
+- An overall UX score from 0-100
+- A page title
+- A brief executive summary (2-3 sentences)
+
+Be thorough but realistic. Not every heuristic will have violations.`;
+
+const toolSchema = {
+  type: "function",
+  function: {
+    name: "ux_evaluation_result",
+    description: "Return the complete UX heuristic evaluation results with decision intelligence data",
+    parameters: {
+      type: "object",
+      properties: {
+        page_title: { type: "string", description: "The title/name of the website page" },
+        summary: { type: "string", description: "Executive summary of the UX evaluation (2-3 sentences)" },
+        overall_score: { type: "integer", minimum: 0, maximum: 100 },
+        heuristic_results: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              heuristic_name: { type: "string", description: "Name of the Nielsen heuristic" },
+              issue: { type: "string", description: "Specific issue found" },
+              severity: { type: "string", enum: ["Low", "Medium", "High"] },
+              recommendation: { type: "string", description: "Actionable recommendation to fix the issue" },
+              impact: { type: "string", enum: ["Low", "Medium", "High"] },
+              effort: { type: "string", enum: ["Low", "Medium", "High"] },
+              kpi_impact: { type: "string" },
+              risk_level: { type: "string", enum: ["Low", "Medium", "High"] },
+              task_title: { type: "string" },
+              task_description: { type: "string" },
+              why_flagged: { type: "string", description: "Concise explanation of why this issue was detected" },
+              evidence: { type: "string", description: "Specific UI/content observation proving this issue exists" },
+              sub_scores: {
+                type: "object",
+                properties: {
+                  "Navigation Clarity": { type: "integer", minimum: 0, maximum: 100 },
+                  "Information Hierarchy": { type: "integer", minimum: 0, maximum: 100 },
+                  "Feedback Visibility": { type: "integer", minimum: 0, maximum: 100 },
+                  "Error Prevention": { type: "integer", minimum: 0, maximum: 100 },
+                  "Interaction Efficiency": { type: "integer", minimum: 0, maximum: 100 },
+                },
+                required: ["Navigation Clarity", "Information Hierarchy", "Feedback Visibility", "Error Prevention", "Interaction Efficiency"],
+                additionalProperties: false,
+              },
+            },
+            required: ["heuristic_name", "issue", "severity", "recommendation", "impact", "effort", "kpi_impact", "risk_level", "task_title", "task_description", "why_flagged", "evidence", "sub_scores"],
+            additionalProperties: false,
+          },
+        },
+      },
+      required: ["page_title", "summary", "overall_score", "heuristic_results"],
+      additionalProperties: false,
+    },
+  },
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -29,28 +105,6 @@ serve(async (req) => {
       );
     }
 
-    const systemPrompt = `You are an expert UX researcher, usability analyst, and product strategist. You evaluate websites using Jakob Nielsen's 10 Usability Heuristics and provide actionable decision intelligence.
-
-Given website content, analyze it and return structured JSON data via the provided tool.
-
-For each of the 10 heuristics, identify specific issues found on the website. Be specific and actionable. Rate severity as "Low", "Medium", or "High".
-
-For each heuristic result, also provide:
-- sub_scores (0-100) for: Navigation Clarity, Information Hierarchy, Feedback Visibility, Error Prevention, Interaction Efficiency
-- impact: "High", "Medium", or "Low" — based on how much this issue affects user goals and business outcomes
-- effort: "High", "Medium", or "Low" — based on implementation complexity to fix
-- kpi_impact: which business KPI this most affects (e.g., "Conversion Rate", "Task Completion", "User Retention", "Bounce Rate", "Time on Task", "Error Rate")
-- risk_level: "High", "Medium", or "Low" — the risk of NOT fixing this issue
-- task_title: a short actionable fix description (e.g., "Add breadcrumb navigation")
-- task_description: a detailed description of what needs to be done to fix this issue
-
-Also generate:
-- An overall UX score from 0-100
-- A page title
-- A brief executive summary (2-3 sentences)
-
-Be thorough but realistic. Not every heuristic will have violations.`;
-
     const userPrompt = `Analyze this website for UX usability issues.
 
 URL: ${url}
@@ -70,57 +124,7 @@ ${markdown.substring(0, 12000)}`;
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "ux_evaluation_result",
-              description: "Return the complete UX heuristic evaluation results with decision intelligence data",
-              parameters: {
-                type: "object",
-                properties: {
-                  page_title: { type: "string", description: "The title/name of the website page" },
-                  summary: { type: "string", description: "Executive summary of the UX evaluation (2-3 sentences)" },
-                  overall_score: { type: "integer", minimum: 0, maximum: 100 },
-                  heuristic_results: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        heuristic_name: { type: "string", description: "Name of the Nielsen heuristic" },
-                        issue: { type: "string", description: "Specific issue found" },
-                        severity: { type: "string", enum: ["Low", "Medium", "High"] },
-                        recommendation: { type: "string", description: "Actionable recommendation to fix the issue" },
-                        impact: { type: "string", enum: ["Low", "Medium", "High"], description: "Effect on user goals and business outcomes" },
-                        effort: { type: "string", enum: ["Low", "Medium", "High"], description: "Implementation complexity" },
-                        kpi_impact: { type: "string", description: "Business KPI most affected (e.g., Conversion Rate, Task Completion, User Retention)" },
-                        risk_level: { type: "string", enum: ["Low", "Medium", "High"], description: "Risk of not fixing this issue" },
-                        task_title: { type: "string", description: "Short actionable fix description" },
-                        task_description: { type: "string", description: "Detailed description of what needs to be done" },
-                        sub_scores: {
-                          type: "object",
-                          properties: {
-                            "Navigation Clarity": { type: "integer", minimum: 0, maximum: 100 },
-                            "Information Hierarchy": { type: "integer", minimum: 0, maximum: 100 },
-                            "Feedback Visibility": { type: "integer", minimum: 0, maximum: 100 },
-                            "Error Prevention": { type: "integer", minimum: 0, maximum: 100 },
-                            "Interaction Efficiency": { type: "integer", minimum: 0, maximum: 100 },
-                          },
-                          required: ["Navigation Clarity", "Information Hierarchy", "Feedback Visibility", "Error Prevention", "Interaction Efficiency"],
-                          additionalProperties: false,
-                        },
-                      },
-                      required: ["heuristic_name", "issue", "severity", "recommendation", "impact", "effort", "kpi_impact", "risk_level", "task_title", "task_description", "sub_scores"],
-                      additionalProperties: false,
-                    },
-                  },
-                },
-                required: ["page_title", "summary", "overall_score", "heuristic_results"],
-                additionalProperties: false,
-              },
-            },
-          },
-        ],
+        tools: [toolSchema],
         tool_choice: { type: "function", function: { name: "ux_evaluation_result" } },
       }),
     });

@@ -5,10 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { SeverityBadge } from "@/components/SeverityBadge";
 import { PriorityBadge } from "@/components/PriorityBadge";
 import { ConfidenceBadge } from "@/components/ConfidenceBadge";
+import { IssueConfidenceBadge } from "@/components/IssueConfidenceBadge";
+import { ExplainabilityPanel } from "@/components/ExplainabilityPanel";
 import { AlertTriangle } from "lucide-react";
 import type { HeuristicResult } from "@/lib/api/analysis";
 import { getConfidenceMap, type ConfidenceLevel } from "@/lib/api/learning";
-import { cn } from "@/lib/utils";
 
 function calcPriority(impact: string, effort: string): "High" | "Medium" | "Low" {
   if (impact === "High" && effort === "Low") return "High";
@@ -18,7 +19,7 @@ function calcPriority(impact: string, effort: string): "High" | "Medium" | "Low"
   return "Medium";
 }
 
-export function HeuristicTable({ results }: { results: HeuristicResult[] }) {
+export function HeuristicTable({ results, runCount = 1 }: { results: HeuristicResult[]; runCount?: number }) {
   const [confidenceMap, setConfidenceMap] = useState<Map<string, { level: ConfidenceLevel; count: number }>>(new Map());
 
   useEffect(() => {
@@ -45,6 +46,7 @@ export function HeuristicTable({ results }: { results: HeuristicResult[] }) {
                 <TableHead className="w-[80px]">Impact</TableHead>
                 <TableHead className="w-[80px]">Effort</TableHead>
                 <TableHead className="w-[100px]">Confidence</TableHead>
+                {runCount > 1 && <TableHead className="w-[80px]">Runs</TableHead>}
                 <TableHead className="w-[120px]">KPI</TableHead>
                 <TableHead>Recommendation</TableHead>
               </TableRow>
@@ -55,7 +57,10 @@ export function HeuristicTable({ results }: { results: HeuristicResult[] }) {
                 return (
                   <TableRow key={i}>
                     <TableCell className="font-medium text-sm">{v.heuristic_name}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{v.issue}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      <div>{v.issue}</div>
+                      <ExplainabilityPanel result={v} totalRuns={runCount} />
+                    </TableCell>
                     <TableCell>
                       <SeverityBadge severity={v.severity} />
                     </TableCell>
@@ -75,6 +80,15 @@ export function HeuristicTable({ results }: { results: HeuristicResult[] }) {
                         <ConfidenceBadge level="Low" count={0} compact />
                       )}
                     </TableCell>
+                    {runCount > 1 && (
+                      <TableCell>
+                        <IssueConfidenceBadge
+                          occurrenceCount={v.occurrence_count ?? 1}
+                          totalRuns={runCount}
+                          compact
+                        />
+                      </TableCell>
+                    )}
                     <TableCell className="text-xs text-muted-foreground">{v.kpi_impact || "–"}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{v.recommendation}</TableCell>
                   </TableRow>
