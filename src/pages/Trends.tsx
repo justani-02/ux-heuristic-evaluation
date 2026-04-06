@@ -21,6 +21,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export default function Trends() {
+  const { user } = useAuth();
   const [analyses, setAnalyses] = useState<AnalysisResult[]>([]);
   const [heuristicPerf, setHeuristicPerf] = useState<HeuristicPerformance[]>([]);
   const [loading, setLoading] = useState(true);
