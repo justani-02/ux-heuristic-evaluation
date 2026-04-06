@@ -10,6 +10,7 @@ import Report from "./pages/Report";
 import Tasks from "./pages/Tasks";
 import Trends from "./pages/Trends";
 import Compare from "./pages/Compare";
+import RunComparison from "./pages/RunComparison";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
