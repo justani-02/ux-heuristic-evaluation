@@ -199,7 +199,16 @@ export default function Compare() {
           </p>
         </div>
 
-        {loading ? (
+        {!user ? (
+          <Card className="border-border/50">
+            <CardContent className="p-12 text-center">
+              <GitCompareArrows className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+              <h3 className="font-semibold mb-1">Log in to view your past analyses</h3>
+              <p className="text-sm text-muted-foreground mb-4">Sign in to compare and validate your UX improvements.</p>
+              <Link to="/auth" className="text-primary hover:underline text-sm font-medium">Sign in →</Link>
+            </CardContent>
+          </Card>
+        ) : loading ? (
           <div className="space-y-4"><Skeleton className="h-20" /><Skeleton className="h-64" /></div>
         ) : analyses.length < 2 ? (
           <Card className="border-border/50">
