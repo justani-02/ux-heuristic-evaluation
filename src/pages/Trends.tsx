@@ -45,6 +45,19 @@ export default function Trends() {
     url: a.url,
   }));
 
+  const trustData = analyses.map((a) => ({
+    date: new Date(a.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    Confidence: a.confidence_score ?? 100,
+    mode: a.analysis_mode === "reliable" ? "Reliable" : "Fast",
+    runs: a.run_count ?? 1,
+    url: a.url,
+  }));
+
+  const avgConfidence = analyses.length > 0
+    ? Math.round(analyses.reduce((s, a) => s + (a.confidence_score ?? 100), 0) / analyses.length)
+    : 0;
+  const reliableCount = analyses.filter(a => a.analysis_mode === "reliable").length;
+
   const kpiData = analyses
     .filter((a) => a.conversion_rate != null || a.bounce_rate != null || a.task_completion_rate != null || a.drop_off_rate != null)
     .map((a) => ({
@@ -225,7 +238,77 @@ export default function Trends() {
               </Card>
             )}
 
-            {/* Sub-score Trends */}
+            {/* Trust & Confidence Trend */}
+            <Card className="border-border/50 mb-8">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-primary" />
+                  Trust & Confidence Over Time
+                </CardTitle>
+                <CardDescription className="flex items-center gap-4 mt-1">
+                  <span>Avg confidence: <strong>{avgConfidence}%</strong></span>
+                  <span>Reliable runs: <strong>{reliableCount}/{analyses.length}</strong></span>
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-72">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={trustData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="date" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
+                      <YAxis domain={[0, 100]} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
+                      <Tooltip
+                        contentStyle={{
+                          background: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "8px",
+                          fontSize: "12px",
+                          color: "hsl(var(--card-foreground))",
+                        }}
+                        labelStyle={{ color: "hsl(var(--muted-foreground))" }}
+                        formatter={(value: number, name: string, props: any) => {
+                          const { mode, runs } = props.payload;
+                          return [`${value}% (${mode}, ${runs} run${runs > 1 ? "s" : ""})`, name];
+                        }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="Confidence"
+                        stroke="hsl(var(--severity-low))"
+                        strokeWidth={2.5}
+                        dot={(dotProps: any) => {
+                          const { cx, cy, payload } = dotProps;
+                          const isReliable = payload.mode === "Reliable";
+                          return (
+                            <circle
+                              key={`dot-${cx}-${cy}`}
+                              cx={cx}
+                              cy={cy}
+                              r={isReliable ? 6 : 4}
+                              fill={isReliable ? "hsl(var(--severity-low))" : "hsl(var(--muted-foreground))"}
+                              stroke="hsl(var(--card))"
+                              strokeWidth={2}
+                            />
+                          );
+                        }}
+                        activeDot={{ r: 8 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="flex items-center gap-6 mt-3 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-full bg-[hsl(var(--severity-low))]" />
+                    Reliable Mode
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-muted-foreground" />
+                    Fast Mode
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+
             <Card className="border-border/50">
               <CardHeader>
                 <CardTitle className="text-lg">
