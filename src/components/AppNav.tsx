@@ -99,19 +99,47 @@ export function AppNav() {
             </DropdownMenu>
           </div>
 
-          {/* Auth button */}
+          {/* Auth */}
           <div className="ml-1">
             {user ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-9 w-9" onClick={signOut}>
-                    <LogOut className="w-4 h-4" />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-2 px-2">
+                    <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center">
+                      <User className="w-3.5 h-3.5 text-primary" />
+                    </div>
+                    <span className="text-sm font-medium max-w-[120px] truncate hidden sm:inline">
+                      {user.email?.split("@")[0]}
+                    </span>
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                   </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-xs">
-                  Sign out ({user.email})
-                </TooltipContent>
-              </Tooltip>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex items-center gap-3 py-1">
+                      <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                        <User className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold truncate">{user.email?.split("@")[0]}</p>
+                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                      </div>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="text-xs text-muted-foreground cursor-default focus:bg-transparent" disabled>
+                    ID: {user.id.slice(0, 8)}…
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="text-xs text-muted-foreground cursor-default focus:bg-transparent" disabled>
+                    Joined: {new Date(user.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={signOut} className="text-destructive focus:text-destructive cursor-pointer">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/auth">
