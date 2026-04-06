@@ -91,7 +91,10 @@ export async function startAnalysis(
   onProgress?: (stage: "scraping" | "analyzing" | "generating") => void,
   previousAnalysisId?: string
 ): Promise<AnalysisResult> {
-  const insertData: any = { url, status: "scraping" };
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("You must be logged in to run an analysis");
+
+  const insertData: any = { url, status: "scraping", user_id: user.id };
   if (previousAnalysisId) insertData.previous_analysis_id = previousAnalysisId;
 
   const { data: record, error: insertError } = await supabase
