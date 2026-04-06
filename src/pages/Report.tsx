@@ -13,7 +13,8 @@ import { ExplainabilityPanel } from "@/components/ExplainabilityPanel";
 import { TrustConfidenceSection } from "@/components/TrustConfidenceSection";
 import { AppNav } from "@/components/AppNav";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Printer, ExternalLink } from "lucide-react";
+import { ArrowLeft, Printer, ExternalLink, Layers } from "lucide-react";
+import { Link } from "react-router-dom";
 import { UXImpactSummaryCard } from "@/components/UXImpactSummaryCard";
 import { getConfidenceMap, type ConfidenceLevel } from "@/lib/api/learning";
 
@@ -77,9 +78,18 @@ export default function Report() {
           <Button variant="ghost" size="sm" onClick={() => navigate(`/dashboard/${analysis.id}`)} className="-ml-2">
             <ArrowLeft className="w-4 h-4 mr-1" /> Dashboard
           </Button>
-          <Button variant="outline" size="sm" onClick={() => window.print()}>
-            <Printer className="w-4 h-4 mr-1" /> Print Report
-          </Button>
+          <div className="flex items-center gap-2">
+            {(analysis.run_count ?? 1) > 1 && (
+              <Link to={`/runs/${analysis.id}`}>
+                <Button variant="outline" size="sm">
+                  <Layers className="w-4 h-4 mr-1" /> Compare Runs
+                </Button>
+              </Link>
+            )}
+            <Button variant="outline" size="sm" onClick={() => window.print()}>
+              <Printer className="w-4 h-4 mr-1" /> Print Report
+            </Button>
+          </div>
         </div>
 
         <div className="text-center mb-10">

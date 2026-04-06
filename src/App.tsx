@@ -10,6 +10,7 @@ import Report from "./pages/Report";
 import Tasks from "./pages/Tasks";
 import Trends from "./pages/Trends";
 import Compare from "./pages/Compare";
+import RunComparison from "./pages/RunComparison";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/trends" element={<Trends />} />
             <Route path="/compare" element={<Compare />} />
+            <Route path="/runs/:id" element={<RunComparison />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
