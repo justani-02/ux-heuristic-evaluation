@@ -39,7 +39,10 @@ export default function Index() {
   const handleAnalyze = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) return;
-
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
     setLoading(true);
     setStage("scraping");
     try {
