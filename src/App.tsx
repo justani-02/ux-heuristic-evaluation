@@ -12,6 +12,7 @@ import Trends from "./pages/Trends";
 import Compare from "./pages/Compare";
 import RunComparison from "./pages/RunComparison";
 import Auth from "./pages/Auth";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
