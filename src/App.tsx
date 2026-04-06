@@ -12,6 +12,7 @@ import Trends from "./pages/Trends";
 import Compare from "./pages/Compare";
 import RunComparison from "./pages/RunComparison";
 import Auth from "./pages/Auth";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/trends" element={<Trends />} />
             <Route path="/compare" element={<Compare />} />
             <Route path="/runs/:id" element={<RunComparison />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -1,5 +1,5 @@
-import { Link, useLocation } from "react-router-dom";
-import { BarChart3, ListTodo, TrendingUp, GitCompareArrows, Sun, Moon, Monitor, LogIn, LogOut, User, ChevronDown } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { BarChart3, ListTodo, TrendingUp, GitCompareArrows, Sun, Moon, Monitor, LogIn, LogOut, User, ChevronDown, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme, type Theme } from "@/hooks/use-theme";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,6 +30,7 @@ const themeOptions: { value: Theme; label: string; icon: typeof Sun }[] = [
 
 export function AppNav() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { theme, resolved, setTheme } = useTheme();
   const { user, signOut } = useAuth();
 
@@ -134,6 +135,10 @@ export function AppNav() {
                     Joined: {new Date(user.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate("/settings")} className="cursor-pointer">
+                    <Settings className="w-4 h-4 mr-2" />
+                    Settings
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={signOut} className="text-destructive focus:text-destructive cursor-pointer">
                     <LogOut className="w-4 h-4 mr-2" />
                     Sign out
