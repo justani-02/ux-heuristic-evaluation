@@ -2,17 +2,11 @@
 
 ## Project info
 
-**URL**: (https://ux-heuristic-evaluation.lovable.app)
+**URL**: https://ux-heuristic-evaluation.lovable.app/
 
 ## How can I edit this code?
 
 There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project][(https://ux-heuristic-evaluation.lovable.app)] and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
 
 **Use your preferred IDE**
 
