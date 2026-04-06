@@ -30,6 +30,7 @@ const themeOptions: { value: Theme; label: string; icon: typeof Sun }[] = [
 
 export function AppNav() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { theme, resolved, setTheme } = useTheme();
   const { user, signOut } = useAuth();
 
