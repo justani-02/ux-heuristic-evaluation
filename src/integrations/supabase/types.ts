@@ -37,6 +37,7 @@ export type Database = {
           task_completion_rate: number | null
           updated_at: string
           url: string
+          user_id: string | null
         }
         Insert: {
           bounce_rate?: number | null
@@ -60,6 +61,7 @@ export type Database = {
           task_completion_rate?: number | null
           updated_at?: string
           url: string
+          user_id?: string | null
         }
         Update: {
           bounce_rate?: number | null
@@ -83,6 +85,7 @@ export type Database = {
           task_completion_rate?: number | null
           updated_at?: string
           url?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -109,6 +112,7 @@ export type Database = {
           task_description: string
           task_title: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           analysis_id: string
@@ -124,6 +128,7 @@ export type Database = {
           task_description?: string
           task_title: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           analysis_id?: string
@@ -139,6 +144,7 @@ export type Database = {
           task_description?: string
           task_title?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { AppNav } from "@/components/AppNav";
+import { useAuth } from "@/contexts/AuthContext";
 import { getAllAnalyses, type AnalysisResult } from "@/lib/api/analysis";
 import { getHeuristicPerformance, type HeuristicPerformance } from "@/lib/api/learning";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -19,6 +21,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export default function Trends() {
+  const { user } = useAuth();
   const [analyses, setAnalyses] = useState<AnalysisResult[]>([]);
   const [heuristicPerf, setHeuristicPerf] = useState<HeuristicPerformance[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,7 +75,16 @@ export default function Trends() {
           </p>
         </div>
 
-        {loading ? (
+        {!user ? (
+          <Card className="border-border/50">
+            <CardContent className="p-12 text-center">
+              <TrendingUp className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+              <h3 className="font-semibold mb-1">Log in to view your trends</h3>
+              <p className="text-sm text-muted-foreground mb-4">Sign in to track your UX score improvements over time.</p>
+              <Link to="/auth" className="text-primary hover:underline text-sm font-medium">Sign in →</Link>
+            </CardContent>
+          </Card>
+        ) : loading ? (
           <div className="space-y-6">
             <Skeleton className="h-20" />
             <Skeleton className="h-80" />

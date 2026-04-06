@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { AppNav } from "@/components/AppNav";
+import { useAuth } from "@/contexts/AuthContext";
 import { getAllTasks, updateTaskStatus, type Task } from "@/lib/api/analysis";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +27,7 @@ const statusColors = {
 };
 
 export default function Tasks() {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState<(Task & { analysis_url?: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
@@ -71,6 +74,27 @@ export default function Tasks() {
           </p>
         </div>
 
+        {!user ? (
+          <Card className="border-border/50">
+            <CardContent className="p-12 text-center">
+              <ListTodo className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+              <h3 className="font-semibold mb-1">Log in to view your tasks</h3>
+              <p className="text-sm text-muted-foreground mb-4">Sign in to access your UX improvement tasks.</p>
+              <Link to="/auth" className="text-primary hover:underline text-sm font-medium">Sign in →</Link>
+            </CardContent>
+          </Card>
+        ) : loading ? (
+          <div className="space-y-4"><Skeleton className="h-20" /><Skeleton className="h-64" /></div>
+        ) : tasks.length === 0 ? (
+          <Card className="border-border/50">
+            <CardContent className="p-12 text-center">
+              <ListTodo className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+              <h3 className="font-semibold mb-1">No tasks yet</h3>
+              <p className="text-sm text-muted-foreground">Run your first UX evaluation to generate actionable tasks.</p>
+            </CardContent>
+          </Card>
+        ) : (
+        <>
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mb-6">
           {[
@@ -200,6 +224,8 @@ export default function Tasks() {
               );
             })}
           </div>
+        )}
+        </>
         )}
       </div>
     </div>

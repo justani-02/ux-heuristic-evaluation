@@ -1,7 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
-import { BarChart3, ListTodo, TrendingUp, GitCompareArrows, Sun, Moon, Monitor } from "lucide-react";
+import { BarChart3, ListTodo, TrendingUp, GitCompareArrows, Sun, Moon, Monitor, LogIn, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme, type Theme } from "@/hooks/use-theme";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
@@ -27,6 +28,7 @@ const themeOptions: { value: Theme; label: string; icon: typeof Sun }[] = [
 export function AppNav() {
   const location = useLocation();
   const { theme, resolved, setTheme } = useTheme();
+  const { user, signOut } = useAuth();
 
   const ActiveIcon = resolved === "dark" ? Moon : Sun;
 
@@ -60,6 +62,8 @@ export function AppNav() {
               </Link>
             );
           })}
+
+          {/* Theme toggle */}
           <div className="ml-2 pl-2 border-l border-border/50">
             <DropdownMenu>
               <Tooltip>
@@ -90,6 +94,29 @@ export function AppNav() {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+          </div>
+
+          {/* Auth button */}
+          <div className="ml-1">
+            {user ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-9 w-9" onClick={signOut}>
+                    <LogOut className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">
+                  Sign out ({user.email})
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/auth">
+                  <LogIn className="w-4 h-4 mr-1.5" />
+                  Sign In
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       </div>

@@ -91,7 +91,10 @@ export async function startAnalysis(
   onProgress?: (stage: "scraping" | "analyzing" | "generating") => void,
   previousAnalysisId?: string
 ): Promise<AnalysisResult> {
-  const insertData: any = { url, status: "scraping" };
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("You must be logged in to run an analysis");
+
+  const insertData: any = { url, status: "scraping", user_id: user.id };
   if (previousAnalysisId) insertData.previous_analysis_id = previousAnalysisId;
 
   const { data: record, error: insertError } = await supabase
@@ -159,6 +162,7 @@ export async function startAnalysis(
     if (heuristicResults.length > 0) {
       const tasks = heuristicResults.map((hr) => ({
         analysis_id: record.id,
+        user_id: user.id,
         task_title: hr.task_title || `Fix: ${hr.issue.substring(0, 60)}`,
         task_description: hr.task_description || hr.recommendation,
         priority: calcPriority(hr.impact, hr.effort),
