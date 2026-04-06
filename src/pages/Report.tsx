@@ -78,9 +78,18 @@ export default function Report() {
           <Button variant="ghost" size="sm" onClick={() => navigate(`/dashboard/${analysis.id}`)} className="-ml-2">
             <ArrowLeft className="w-4 h-4 mr-1" /> Dashboard
           </Button>
-          <Button variant="outline" size="sm" onClick={() => window.print()}>
-            <Printer className="w-4 h-4 mr-1" /> Print Report
-          </Button>
+          <div className="flex items-center gap-2">
+            {(analysis.run_count ?? 1) > 1 && (
+              <Link to={`/runs/${analysis.id}`}>
+                <Button variant="outline" size="sm">
+                  <Layers className="w-4 h-4 mr-1" /> Compare Runs
+                </Button>
+              </Link>
+            )}
+            <Button variant="outline" size="sm" onClick={() => window.print()}>
+              <Printer className="w-4 h-4 mr-1" /> Print Report
+            </Button>
+          </div>
         </div>
 
         <div className="text-center mb-10">
