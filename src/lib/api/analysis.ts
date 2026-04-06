@@ -11,6 +11,10 @@ export type HeuristicResult = {
   risk_level: "Low" | "Medium" | "High";
   task_title: string;
   task_description: string;
+  why_flagged?: string;
+  evidence?: string;
+  occurrence_count?: number;
+  confidence_level?: "High" | "Medium" | "Low";
   sub_scores: {
     "Navigation Clarity": number;
     "Information Hierarchy": number;
@@ -40,6 +44,9 @@ export type AnalysisResult = {
   task_completion_rate: number | null;
   drop_off_rate: number | null;
   previous_analysis_id: string | null;
+  confidence_score: number | null;
+  run_count: number | null;
+  analysis_mode: string | null;
 };
 
 export type Task = {
@@ -56,6 +63,15 @@ export type Task = {
   risk_level: "High" | "Medium" | "Low";
   created_at: string;
   updated_at: string;
+};
+
+export type AnalysisRun = {
+  id: string;
+  analysis_id: string;
+  run_index: number;
+  raw_output: any;
+  overall_score: number | null;
+  created_at: string;
 };
 
 export type ValidationStatus = "Improved" | "Partially Improved" | "No Impact";
@@ -83,18 +99,140 @@ function mapAnalysis(data: any): AnalysisResult {
     task_completion_rate: data.task_completion_rate ?? null,
     drop_off_rate: data.drop_off_rate ?? null,
     previous_analysis_id: data.previous_analysis_id ?? null,
+    confidence_score: data.confidence_score ?? null,
+    run_count: data.run_count ?? null,
+    analysis_mode: data.analysis_mode ?? null,
   };
 }
 
+// --- Multi-run consensus logic ---
+
+type RawRunResult = {
+  page_title?: string;
+  summary?: string;
+  overall_score: number;
+  heuristic_results: HeuristicResult[];
+  screenshot_url?: string;
+};
+
+function issueKey(r: HeuristicResult): string {
+  return `${r.heuristic_name}::${r.issue.toLowerCase().trim().substring(0, 80)}`;
+}
+
+function avgSeverity(severities: string[]): "Low" | "Medium" | "High" {
+  const vals = severities.map(s => s === "High" ? 3 : s === "Medium" ? 2 : 1);
+  const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+  return avg >= 2.5 ? "High" : avg >= 1.5 ? "Medium" : "Low";
+}
+
+function mergeRuns(runs: RawRunResult[], totalRuns: number): {
+  consensusResults: HeuristicResult[];
+  overallScore: number;
+  confidenceScore: number;
+  summary: string;
+  pageTitle: string;
+} {
+  // Group issues across runs
+  const issueMap = new Map<string, { results: HeuristicResult[]; count: number }>();
+
+  for (const run of runs) {
+    for (const hr of run.heuristic_results) {
+      const key = issueKey(hr);
+      const entry = issueMap.get(key) || { results: [], count: 0 };
+      entry.results.push(hr);
+      entry.count++;
+      issueMap.set(key, entry);
+    }
+  }
+
+  // Keep issues that appear in at least 2 runs (or all if single run)
+  const threshold = totalRuns > 1 ? 2 : 1;
+  const consensusResults: HeuristicResult[] = [];
+
+  for (const [, { results, count }] of issueMap) {
+    if (count < threshold) continue;
+
+    const base = results[0];
+    const avgSubScores = {
+      "Navigation Clarity": Math.round(results.reduce((s, r) => s + (r.sub_scores?.["Navigation Clarity"] || 0), 0) / results.length),
+      "Information Hierarchy": Math.round(results.reduce((s, r) => s + (r.sub_scores?.["Information Hierarchy"] || 0), 0) / results.length),
+      "Feedback Visibility": Math.round(results.reduce((s, r) => s + (r.sub_scores?.["Feedback Visibility"] || 0), 0) / results.length),
+      "Error Prevention": Math.round(results.reduce((s, r) => s + (r.sub_scores?.["Error Prevention"] || 0), 0) / results.length),
+      "Interaction Efficiency": Math.round(results.reduce((s, r) => s + (r.sub_scores?.["Interaction Efficiency"] || 0), 0) / results.length),
+    };
+
+    consensusResults.push({
+      ...base,
+      severity: avgSeverity(results.map(r => r.severity)),
+      impact: avgSeverity(results.map(r => r.impact)),
+      effort: avgSeverity(results.map(r => r.effort)),
+      risk_level: avgSeverity(results.map(r => r.risk_level)),
+      sub_scores: avgSubScores,
+      occurrence_count: count,
+      confidence_level: count >= totalRuns ? "High" : count >= 2 ? "Medium" : "Low",
+      why_flagged: base.why_flagged || "",
+      evidence: base.evidence || "",
+    });
+  }
+
+  // Average overall scores
+  const overallScore = Math.round(runs.reduce((s, r) => s + r.overall_score, 0) / runs.length);
+
+  // Calculate confidence score based on consistency
+  const scores = runs.map(r => r.overall_score);
+  const scoreRange = Math.max(...scores) - Math.min(...scores);
+  const scoreStability = Math.max(0, 100 - scoreRange * 2);
+
+  const allIssueKeys = runs.map(r => new Set(r.heuristic_results.map(issueKey)));
+  let overlapSum = 0;
+  let pairCount = 0;
+  for (let i = 0; i < allIssueKeys.length; i++) {
+    for (let j = i + 1; j < allIssueKeys.length; j++) {
+      const intersection = [...allIssueKeys[i]].filter(k => allIssueKeys[j].has(k)).length;
+      const union = new Set([...allIssueKeys[i], ...allIssueKeys[j]]).size;
+      overlapSum += union > 0 ? (intersection / union) * 100 : 100;
+      pairCount++;
+    }
+  }
+  const issueOverlap = pairCount > 0 ? overlapSum / pairCount : 100;
+
+  const confidenceScore = Math.round(scoreStability * 0.4 + issueOverlap * 0.6);
+
+  // Use longest summary
+  const summary = runs.reduce((best, r) => (r.summary || "").length > best.length ? (r.summary || "") : best, "");
+  const pageTitle = runs[0]?.page_title || "";
+
+  return { consensusResults, overallScore, confidenceScore, summary, pageTitle };
+}
+
+// --- Single run executor ---
+async function executeSingleRun(
+  url: string,
+  markdown: string,
+  screenshotUrl: string | null
+): Promise<RawRunResult> {
+  const { data, error } = await supabase.functions.invoke("ux-analyze", {
+    body: { url, markdown, screenshot_url: screenshotUrl },
+  });
+  if (error) throw new Error(error.message || "Analysis failed");
+  if (!data?.success) throw new Error(data?.error || "Analysis failed");
+  return data.data as RawRunResult;
+}
+
+export type AnalysisMode = "fast" | "reliable";
+
 export async function startAnalysis(
   url: string,
-  onProgress?: (stage: "scraping" | "analyzing" | "generating") => void,
-  previousAnalysisId?: string
+  onProgress?: (stage: "scraping" | "analyzing" | "consistency" | "generating") => void,
+  previousAnalysisId?: string,
+  mode: AnalysisMode = "fast"
 ): Promise<AnalysisResult> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("You must be logged in to run an analysis");
 
-  const insertData: any = { url, status: "scraping", user_id: user.id };
+  const runCount = mode === "reliable" ? 3 : 1;
+
+  const insertData: any = { url, status: "scraping", user_id: user.id, analysis_mode: mode, run_count: runCount };
   if (previousAnalysisId) insertData.previous_analysis_id = previousAnalysisId;
 
   const { data: record, error: insertError } = await supabase
@@ -125,33 +263,50 @@ export async function startAnalysis(
       .eq("id", record.id);
 
     onProgress?.("analyzing");
-    const { data: analysisData, error: analysisError } = await supabase.functions.invoke(
-      "ux-analyze",
-      { body: { url, markdown, screenshot_url: screenshotUrl } }
-    );
 
-    if (analysisError) throw new Error(analysisError.message || "Analysis failed");
-    if (!analysisData?.success) throw new Error(analysisData?.error || "Analysis failed");
+    // Execute runs (parallel for reliable mode)
+    const runPromises: Promise<RawRunResult>[] = [];
+    for (let i = 0; i < runCount; i++) {
+      runPromises.push(executeSingleRun(url, markdown, screenshotUrl));
+    }
+    const runResults = await Promise.all(runPromises);
 
-    const result = analysisData.data;
-    const heuristicResults: HeuristicResult[] = result.heuristic_results || [];
+    // Store individual runs
+    const runInserts = runResults.map((result, i) => ({
+      analysis_id: record.id,
+      run_index: i + 1,
+      raw_output: result as any,
+      overall_score: result.overall_score,
+      user_id: user.id,
+    }));
+    await supabase.from("analysis_runs").insert(runInserts as any);
+
+    if (runCount > 1) {
+      onProgress?.("consistency");
+    }
+
+    // Merge results
+    const { consensusResults, overallScore, confidenceScore, summary, pageTitle: aiPageTitle } =
+      mergeRuns(runResults, runCount);
 
     onProgress?.("generating");
     const { data: updated, error: updateError } = await supabase
       .from("analyses")
       .update({
         status: "completed",
-        page_title: result.page_title || pageTitle,
-        summary: result.summary,
-        screenshot_url: result.screenshot_url || screenshotUrl,
-        overall_score: result.overall_score,
-        navigation_clarity_score: avgSubScore(heuristicResults, "Navigation Clarity"),
-        information_hierarchy_score: avgSubScore(heuristicResults, "Information Hierarchy"),
-        feedback_visibility_score: avgSubScore(heuristicResults, "Feedback Visibility"),
-        error_prevention_score: avgSubScore(heuristicResults, "Error Prevention"),
-        interaction_efficiency_score: avgSubScore(heuristicResults, "Interaction Efficiency"),
-        heuristic_violations: heuristicResults as any,
+        page_title: aiPageTitle || pageTitle,
+        summary,
+        screenshot_url: runResults[0]?.screenshot_url || screenshotUrl,
+        overall_score: overallScore,
+        navigation_clarity_score: avgSubScore(consensusResults, "Navigation Clarity"),
+        information_hierarchy_score: avgSubScore(consensusResults, "Information Hierarchy"),
+        feedback_visibility_score: avgSubScore(consensusResults, "Feedback Visibility"),
+        error_prevention_score: avgSubScore(consensusResults, "Error Prevention"),
+        interaction_efficiency_score: avgSubScore(consensusResults, "Interaction Efficiency"),
+        heuristic_violations: consensusResults as any,
         recommendations: [] as any,
+        confidence_score: confidenceScore,
+        run_count: runCount,
       })
       .eq("id", record.id)
       .select()
@@ -159,8 +314,8 @@ export async function startAnalysis(
 
     if (updateError || !updated) throw new Error("Failed to save results");
 
-    if (heuristicResults.length > 0) {
-      const tasks = heuristicResults.map((hr) => ({
+    if (consensusResults.length > 0) {
+      const tasks = consensusResults.map((hr) => ({
         analysis_id: record.id,
         user_id: user.id,
         task_title: hr.task_title || `Fix: ${hr.issue.substring(0, 60)}`,
@@ -188,6 +343,16 @@ export async function getAnalysis(id: string): Promise<AnalysisResult | null> {
   const { data, error } = await supabase.from("analyses").select().eq("id", id).single();
   if (error || !data) return null;
   return mapAnalysis(data);
+}
+
+export async function getAnalysisRuns(analysisId: string): Promise<AnalysisRun[]> {
+  const { data, error } = await supabase
+    .from("analysis_runs")
+    .select()
+    .eq("analysis_id", analysisId)
+    .order("run_index", { ascending: true });
+  if (error || !data) return [];
+  return data as unknown as AnalysisRun[];
 }
 
 export async function getAllAnalyses(): Promise<AnalysisResult[]> {
