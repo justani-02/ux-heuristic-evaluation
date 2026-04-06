@@ -27,6 +27,7 @@ const statusColors = {
 };
 
 export default function Tasks() {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState<(Task & { analysis_url?: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
