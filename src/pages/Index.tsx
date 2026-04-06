@@ -34,6 +34,7 @@ export default function Index() {
   const [stage, setStage] = useState<AnalysisStage>("scraping");
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleAnalyze = async (e: React.FormEvent) => {
     e.preventDefault();
