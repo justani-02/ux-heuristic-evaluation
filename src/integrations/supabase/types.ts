@@ -144,6 +144,36 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          created_at: string
+          default_analysis_mode: string | null
+          display_name: string | null
+          email_notifications: boolean | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          default_analysis_mode?: string | null
+          display_name?: string | null
+          email_notifications?: boolean | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          default_analysis_mode?: string | null
+          display_name?: string | null
+          email_notifications?: boolean | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           analysis_id: string
