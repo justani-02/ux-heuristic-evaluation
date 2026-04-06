@@ -162,6 +162,7 @@ export async function startAnalysis(
     if (heuristicResults.length > 0) {
       const tasks = heuristicResults.map((hr) => ({
         analysis_id: record.id,
+        user_id: user.id,
         task_title: hr.task_title || `Fix: ${hr.issue.substring(0, 60)}`,
         task_description: hr.task_description || hr.recommendation,
         priority: calcPriority(hr.impact, hr.effort),
