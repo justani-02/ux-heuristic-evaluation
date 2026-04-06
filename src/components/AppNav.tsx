@@ -106,42 +106,30 @@ export function AppNav() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="gap-2 px-2">
-                    <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center">
-                      <User className="w-3.5 h-3.5 text-primary" />
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary uppercase">
+                      {(user.email?.slice(0, 2) || "U")}
                     </div>
-                    <span className="text-sm font-medium max-w-[120px] truncate hidden sm:inline">
-                      {user.email?.split("@")[0]}
-                    </span>
-                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                    <ChevronDown className="w-3 h-3 text-muted-foreground hidden sm:block" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64">
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex items-center gap-3 py-1">
-                      <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-                        <User className="w-4 h-4 text-primary" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold truncate">{user.email?.split("@")[0]}</p>
-                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                      </div>
+                <DropdownMenuContent align="end" className="w-60 rounded-2xl p-1.5 shadow-lg border-border/40">
+                  <div className="flex items-center gap-3 px-3 py-3">
+                    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary uppercase shrink-0">
+                      {(user.email?.slice(0, 2) || "U")}
                     </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-xs text-muted-foreground cursor-default focus:bg-transparent" disabled>
-                    ID: {user.id.slice(0, 8)}…
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="text-xs text-muted-foreground cursor-default focus:bg-transparent" disabled>
-                    Joined: {new Date(user.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate("/settings")} className="cursor-pointer">
-                    <Settings className="w-4 h-4 mr-2" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold truncate">{user.email?.split("@")[0]}</p>
+                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator className="mx-1.5" />
+                  <DropdownMenuItem onClick={() => navigate("/settings")} className="cursor-pointer rounded-lg mx-0.5 px-3 py-2.5 text-sm">
+                    <Settings className="w-4 h-4 mr-2.5 text-muted-foreground" />
                     Settings
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={signOut} className="text-destructive focus:text-destructive cursor-pointer">
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign out
+                  <DropdownMenuItem onClick={signOut} className="cursor-pointer rounded-lg mx-0.5 px-3 py-2.5 text-sm text-destructive focus:text-destructive">
+                    <LogOut className="w-4 h-4 mr-2.5" />
+                    Log out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

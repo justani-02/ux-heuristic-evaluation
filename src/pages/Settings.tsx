@@ -3,16 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppNav } from "@/components/AppNav";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
-import { User, Settings, Save, Shield } from "lucide-react";
+import { Settings, Save, Zap, ShieldCheck, Lock } from "lucide-react";
 
 type Profile = {
   id: string;
@@ -29,7 +27,6 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Form state
   const [displayName, setDisplayName] = useState("");
   const [analysisMode, setAnalysisMode] = useState("fast");
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -38,7 +35,6 @@ export default function SettingsPage() {
     if (!user) return;
 
     async function loadProfile() {
-      // Try to fetch existing profile
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -58,7 +54,6 @@ export default function SettingsPage() {
         setAnalysisMode(p.default_analysis_mode || "fast");
         setEmailNotifications(p.email_notifications ?? true);
       } else {
-        // Create profile for existing user (trigger only fires on new signups)
         const { data: newProfile, error: insertError } = await supabase
           .from("profiles")
           .insert({ user_id: user!.id, display_name: "" })
@@ -81,7 +76,6 @@ export default function SettingsPage() {
 
   const handleSave = async () => {
     if (!profile) return;
-
     const trimmedName = displayName.trim().slice(0, 100);
     setSaving(true);
 
@@ -100,7 +94,7 @@ export default function SettingsPage() {
       toast({ title: "Error", description: "Failed to save settings.", variant: "destructive" });
     } else {
       setDisplayName(trimmedName);
-      toast({ title: "Saved", description: "Your settings have been updated." });
+      toast({ title: "Settings updated", description: "Your changes have been saved successfully." });
     }
   };
 
@@ -108,10 +102,12 @@ export default function SettingsPage() {
     return (
       <div className="min-h-screen bg-background">
         <AppNav />
-        <div className="container max-w-2xl mx-auto px-6 py-12 text-center">
-          <Settings className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-          <h3 className="font-semibold mb-1">Sign in required</h3>
-          <p className="text-sm text-muted-foreground mb-4">Please sign in to access your settings.</p>
+        <div className="container max-w-xl mx-auto px-6 py-24 text-center">
+          <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+            <Settings className="w-6 h-6 text-muted-foreground" />
+          </div>
+          <h3 className="font-semibold text-lg mb-1">Sign in required</h3>
+          <p className="text-sm text-muted-foreground mb-6">Please sign in to access your settings.</p>
           <Button onClick={() => navigate("/auth")}>Sign In</Button>
         </div>
       </div>
@@ -121,122 +117,145 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-background">
       <AppNav />
-      <div className="container max-w-2xl mx-auto px-6 py-8">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <Settings className="w-6 h-6 text-primary" />
-            Settings
-          </h1>
+      <div className="container max-w-[600px] mx-auto px-6 py-10">
+        {/* Header */}
+        <div className="mb-10">
+          <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Manage your profile and preferences
+            Manage your account and preferences
           </p>
         </div>
 
         {loading ? (
-          <div className="space-y-4">
-            <Skeleton className="h-48" />
-            <Skeleton className="h-48" />
+          <div className="space-y-8">
+            <Skeleton className="h-40 rounded-2xl" />
+            <Skeleton className="h-40 rounded-2xl" />
+            <Skeleton className="h-24 rounded-2xl" />
           </div>
         ) : (
-          <div className="space-y-6">
-            {/* Profile Section */}
-            <Card className="border-border/50">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <User className="w-5 h-5 text-primary" />
-                  Profile
-                </CardTitle>
-                <CardDescription>Your personal information</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-5">
+          <div className="space-y-10">
+            {/* Section 1: Account */}
+            <section>
+              <h2 className="text-base font-semibold mb-5">Account</h2>
+              <div className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    value={user.email || ""}
-                    disabled
-                    className="bg-muted/30"
-                  />
-                  <p className="text-xs text-muted-foreground">Your email is managed through authentication.</p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="displayName">Display Name</Label>
+                  <Label htmlFor="displayName" className="text-sm">Display Name</Label>
                   <Input
                     id="displayName"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="Enter your display name"
+                    placeholder="Your name"
                     maxLength={100}
+                    className="h-11 rounded-xl border-border/60 focus-visible:ring-primary/30"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    {displayName.length}/100 characters
+                  <p className="text-xs text-muted-foreground/70 tabular-nums">
+                    {displayName.length}/100
                   </p>
                 </div>
 
-                <Separator />
-
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <Shield className="w-4 h-4 shrink-0" />
-                  <span>
-                    User ID: {user.id.slice(0, 8)}… · Joined{" "}
-                    {new Date(user.created_at).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Preferences Section */}
-            <Card className="border-border/50">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Settings className="w-5 h-5 text-primary" />
-                  Preferences
-                </CardTitle>
-                <CardDescription>Customize your analysis experience</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="analysisMode">Default Analysis Mode</Label>
-                  <Select value={analysisMode} onValueChange={setAnalysisMode}>
-                    <SelectTrigger id="analysisMode">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="fast">Fast Mode (1 run)</SelectItem>
-                      <SelectItem value="reliable">Reliable Mode (3 runs)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    Reliable Mode runs 3 parallel analyses for higher confidence scores.
+                  <Label htmlFor="email" className="text-sm">Email</Label>
+                  <Input
+                    id="email"
+                    value={user.email || ""}
+                    disabled
+                    className="h-11 rounded-xl bg-muted/40 text-muted-foreground border-transparent cursor-not-allowed"
+                  />
+                  <p className="text-xs text-muted-foreground/70">
+                    Managed through your authentication provider
                   </p>
                 </div>
+              </div>
+            </section>
 
-                <Separator />
+            <Separator className="bg-border/40" />
 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="emailNotifications">Email Notifications</Label>
-                    <p className="text-xs text-muted-foreground">
-                      Receive updates when analyses complete
-                    </p>
-                  </div>
-                  <Switch
-                    id="emailNotifications"
-                    checked={emailNotifications}
-                    onCheckedChange={setEmailNotifications}
-                  />
+            {/* Section 2: Analysis Preferences */}
+            <section>
+              <h2 className="text-base font-semibold mb-5">Analysis Preferences</h2>
+              <div className="space-y-3">
+                <Label className="text-sm">Default Mode</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setAnalysisMode("fast")}
+                    className={`relative flex flex-col items-start gap-1.5 rounded-xl border p-4 text-left transition-all ${
+                      analysisMode === "fast"
+                        ? "border-primary/50 bg-primary/5 ring-1 ring-primary/20"
+                        : "border-border/60 hover:border-border hover:bg-muted/30"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Zap className={`w-4 h-4 ${analysisMode === "fast" ? "text-primary" : "text-muted-foreground"}`} />
+                      <span className="text-sm font-medium">Fast</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">Quick analysis (1 run)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setAnalysisMode("reliable")}
+                    className={`relative flex flex-col items-start gap-1.5 rounded-xl border p-4 text-left transition-all ${
+                      analysisMode === "reliable"
+                        ? "border-primary/50 bg-primary/5 ring-1 ring-primary/20"
+                        : "border-border/60 hover:border-border hover:bg-muted/30"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className={`w-4 h-4 ${analysisMode === "reliable" ? "text-primary" : "text-muted-foreground"}`} />
+                      <span className="text-sm font-medium">Reliable</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">Higher confidence (3 runs)</span>
+                  </button>
                 </div>
-              </CardContent>
-            </Card>
+                <p className="text-xs text-muted-foreground/70 pt-1">
+                  Reliable mode runs multiple analyses to improve consistency and confidence.
+                </p>
+              </div>
+            </section>
 
-            {/* Save button */}
-            <div className="flex justify-end">
-              <Button onClick={handleSave} disabled={saving} className="min-w-[120px]">
+            <Separator className="bg-border/40" />
+
+            {/* Section 3: Notifications */}
+            <section>
+              <h2 className="text-base font-semibold mb-5">Notifications</h2>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <span className="text-sm">Email me when analysis completes</span>
+                  <p className="text-xs text-muted-foreground/70">
+                    Get notified when your results are ready
+                  </p>
+                </div>
+                <Switch
+                  checked={emailNotifications}
+                  onCheckedChange={setEmailNotifications}
+                />
+              </div>
+            </section>
+
+            <Separator className="bg-border/40" />
+
+            {/* Coming Soon */}
+            <section className="opacity-50 pointer-events-none select-none">
+              <div className="flex items-center gap-2 mb-3">
+                <h2 className="text-base font-semibold">Advanced Preferences</h2>
+                <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                  Coming Soon
+                </span>
+              </div>
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <Lock className="w-4 h-4 shrink-0" />
+                <span>Custom scoring weights, export formats, and integrations</span>
+              </div>
+            </section>
+
+            {/* Save */}
+            <div className="flex justify-end pt-2 pb-6">
+              <Button
+                onClick={handleSave}
+                disabled={saving}
+                className="min-w-[140px] h-10 rounded-xl shadow-sm"
+              >
                 <Save className="w-4 h-4 mr-2" />
                 {saving ? "Saving…" : "Save Changes"}
               </Button>
