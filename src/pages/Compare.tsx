@@ -150,6 +150,7 @@ function KPIDeltaRow({ label, before, after, invert = false }: { label: string; 
 }
 
 export default function Compare() {
+  const { user } = useAuth();
   const [analyses, setAnalyses] = useState<AnalysisResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [baselineId, setBaselineId] = useState<string>("");
