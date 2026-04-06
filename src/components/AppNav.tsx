@@ -1,14 +1,17 @@
 import { Link, useLocation } from "react-router-dom";
-import { BarChart3, ListTodo, TrendingUp, GitCompareArrows, Sun, Moon, Monitor, LogIn, LogOut } from "lucide-react";
+import { BarChart3, ListTodo, TrendingUp, GitCompareArrows, Sun, Moon, Monitor, LogIn, LogOut, User, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme, type Theme } from "@/hooks/use-theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Separator } from "@/components/ui/separator";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
