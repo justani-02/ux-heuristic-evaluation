@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { AppNav } from "@/components/AppNav";
+import { useAuth } from "@/contexts/AuthContext";
 import { getAllTasks, updateTaskStatus, type Task } from "@/lib/api/analysis";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
