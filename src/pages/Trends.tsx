@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { AppNav } from "@/components/AppNav";
+import { useAuth } from "@/contexts/AuthContext";
 import { getAllAnalyses, type AnalysisResult } from "@/lib/api/analysis";
 import { getHeuristicPerformance, type HeuristicPerformance } from "@/lib/api/learning";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
