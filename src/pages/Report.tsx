@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
-import { getAnalysis, type AnalysisResult } from "@/lib/api/analysis";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useParams, useNavigate } from "react-router-dom";
+import { getAnalysis, getAnalysisRuns, type AnalysisResult, type AnalysisRun } from "@/lib/api/analysis";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScoreRing } from "@/components/ScoreRing";
 import { SeverityBadge } from "@/components/SeverityBadge";
 import { ConfidenceBadge } from "@/components/ConfidenceBadge";
+import { IssueConfidenceBadge } from "@/components/IssueConfidenceBadge";
+import { ExplainabilityPanel } from "@/components/ExplainabilityPanel";
+import { TrustConfidenceSection } from "@/components/TrustConfidenceSection";
 import { AppNav } from "@/components/AppNav";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Printer, ExternalLink } from "lucide-react";
@@ -18,16 +21,22 @@ export default function Report() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
+  const [runs, setRuns] = useState<AnalysisRun[]>([]);
   const [loading, setLoading] = useState(true);
   const [confidenceMap, setConfidenceMap] = useState<Map<string, { level: ConfidenceLevel; count: number }>>(new Map());
 
   useEffect(() => {
     if (!id) return;
-    getAnalysis(id).then((data) => {
+    Promise.all([
+      getAnalysis(id),
+      getAnalysisRuns(id),
+      getConfidenceMap(),
+    ]).then(([data, runsData, confMap]) => {
       setAnalysis(data);
+      setRuns(runsData);
+      setConfidenceMap(confMap);
       setLoading(false);
     });
-    getConfidenceMap().then(setConfidenceMap);
   }, [id]);
 
   if (loading) {
@@ -58,6 +67,8 @@ export default function Report() {
     year: "numeric", month: "long", day: "numeric",
   });
 
+  const runCount = analysis.run_count ?? 1;
+
   return (
     <div className="min-h-screen bg-background">
       <AppNav />
@@ -84,6 +95,8 @@ export default function Report() {
         </div>
 
         <Separator className="mb-8" />
+
+        <TrustConfidenceSection analysis={analysis} runs={runs} />
 
         <UXImpactSummaryCard results={analysis.heuristic_results} />
 
@@ -148,6 +161,12 @@ export default function Report() {
                        const conf = confidenceMap.get(v.heuristic_name);
                        return conf ? <ConfidenceBadge level={conf.level} count={conf.count} /> : <ConfidenceBadge level="Low" count={0} />;
                      })()}
+                     {runCount > 1 && (
+                       <IssueConfidenceBadge
+                         occurrenceCount={v.occurrence_count ?? 1}
+                         totalRuns={runCount}
+                       />
+                     )}
                    </div>
                   <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
                     <span>Nav: <strong className="text-foreground">{v.sub_scores?.["Navigation Clarity"] ?? "–"}</strong></span>
@@ -156,6 +175,7 @@ export default function Report() {
                     <span>Errors: <strong className="text-foreground">{v.sub_scores?.["Error Prevention"] ?? "–"}</strong></span>
                     <span>Efficiency: <strong className="text-foreground">{v.sub_scores?.["Interaction Efficiency"] ?? "–"}</strong></span>
                   </div>
+                  <ExplainabilityPanel result={v} totalRuns={runCount} />
                 </CardContent>
               </Card>
             ))}
