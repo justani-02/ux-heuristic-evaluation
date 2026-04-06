@@ -45,6 +45,19 @@ export default function Trends() {
     url: a.url,
   }));
 
+  const trustData = analyses.map((a) => ({
+    date: new Date(a.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    Confidence: a.confidence_score ?? 100,
+    mode: a.analysis_mode === "reliable" ? "Reliable" : "Fast",
+    runs: a.run_count ?? 1,
+    url: a.url,
+  }));
+
+  const avgConfidence = analyses.length > 0
+    ? Math.round(analyses.reduce((s, a) => s + (a.confidence_score ?? 100), 0) / analyses.length)
+    : 0;
+  const reliableCount = analyses.filter(a => a.analysis_mode === "reliable").length;
+
   const kpiData = analyses
     .filter((a) => a.conversion_rate != null || a.bounce_rate != null || a.task_completion_rate != null || a.drop_off_rate != null)
     .map((a) => ({
