@@ -118,6 +118,37 @@ export default function Index() {
               )}
             </Button>
           </form>
+
+          {/* Mode Toggle */}
+          <div className="flex items-center justify-center gap-2 mt-4">
+            <span className="text-xs text-muted-foreground">Mode:</span>
+            <div className="inline-flex rounded-lg border border-border/60 p-0.5 bg-muted/30">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => setMode("fast")}
+                    className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${mode === "fast" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    ⚡ Fast
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Single run — faster results</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => setMode("reliable")}
+                    className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${mode === "reliable" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    🛡️ Reliable
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>3 parallel runs with consensus — higher confidence</TooltipContent>
+              </Tooltip>
+            </div>
+          </div>
         </div>
       </section>
 
