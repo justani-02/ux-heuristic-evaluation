@@ -31,6 +31,7 @@ const App = () => (
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/trends" element={<Trends />} />
             <Route path="/compare" element={<Compare />} />
+            <Route path="/runs/:id" element={<RunComparison />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

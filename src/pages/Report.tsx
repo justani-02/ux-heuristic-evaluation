@@ -13,7 +13,8 @@ import { ExplainabilityPanel } from "@/components/ExplainabilityPanel";
 import { TrustConfidenceSection } from "@/components/TrustConfidenceSection";
 import { AppNav } from "@/components/AppNav";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Printer, ExternalLink } from "lucide-react";
+import { ArrowLeft, Printer, ExternalLink, Layers } from "lucide-react";
+import { Link } from "react-router-dom";
 import { UXImpactSummaryCard } from "@/components/UXImpactSummaryCard";
 import { getConfidenceMap, type ConfidenceLevel } from "@/lib/api/learning";
 
